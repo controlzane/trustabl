@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-raleway);
-  --font-numbers: var(--font-bebas-neue);
+  --font-sans: var(--font-poppins);
 }
 
 :root {
@@ -38,6 +37,42 @@
 .animate-float   { animation: float 4s ease-in-out infinite; }
 .animate-fade-in { animation: fadeInUp 0.7s ease-out forwards; }
 
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+@keyframes scaleFadeIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes arrowPulse {
+  0%, 100% { transform: translateX(0); opacity: 0.3; }
+  50%       { transform: translateX(4px); opacity: 0.7; }
+}
+
+/* Flow purification animation */
+
+@keyframes coreGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(45,212,191,0.28), 0 0 36px rgba(45,212,191,0.10); }
+  50%       { box-shadow: 0 0 30px rgba(45,212,191,0.50), 0 0 60px rgba(45,212,191,0.20); }
+}
+@keyframes coreRing {
+  0%   { transform: scale(1);   opacity: 0.4; }
+  100% { transform: scale(2.9); opacity: 0; }
+}
+@keyframes streamDash {
+  0%   { stroke-dashoffset: 40; opacity: 0.10; }
+  50%  { opacity: 0.22; }
+  100% { stroke-dashoffset: 0;  opacity: 0.10; }
+}
+
 html {
   scroll-behavior: smooth;
   background: #0C0C0E;
@@ -46,12 +81,7 @@ html {
 body {
   background: #0C0C0E;
   color: #ffffff;
-  font-family: var(--font-raleway), sans-serif;
-}
-
-.font-numbers {
-  font-family: var(--font-bebas-neue), sans-serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-poppins), sans-serif;
 }
 
 ::selection {
