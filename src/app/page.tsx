@@ -6,6 +6,8 @@ import {
   GitBranch, BarChart3, ShieldCheck, Download,
   Clock, TrendingDown, Eye,
   Play, Terminal,
+  Zap, DollarSign, Activity, Settings2, TrendingUp,
+  Monitor, Wrench, FileText, Cpu, Code2, Link2,
 } from 'lucide-react';
 
 const githubRepoUrl = 'https://github.com/controlzane/trustabl.git';
@@ -898,60 +900,48 @@ export default function Home() {
 
   const pricingTiers = [
     {
-      name: 'Try It',
+      name: 'Open Source',
       price: 'Free',
       period: '',
-      best: 'Testing the magic\nLow-friction trial',
-      features: ['1 repo', 'Local inference (Qwen)', 'Core auto-hardening', 'Basic findings & score'],
+      best: 'Trust / Reliability Scanner',
+      features: [
+        'Scan for agent/tool issues',
+        'Instant quality score',
+        'Identifies issues and omissions',
+        'Suggests remediations',
+      ],
       cta: 'Start Free',
       highlight: false,
     },
     {
-      name: 'Builder',
-      price: '$9.98',
-      period: '/ user / mo',
-      best: 'Serious individual builders\nDaily power users',
+      name: 'Try It',
+      price: 'Free',
+      period: '',
+      best: 'No Credit Card / No Account',
       features: [
-        'BYOK (bring your own key)',
-        'Up to 10 active repos',
-        'CI/CD GitHub Action (core)',
-        'Production Ready badges',
-        'Full exports (MCP, SDK, basic OpenShell)',
+        '1 repo',
+        'GitHub connect',
+        'Full auto-enrichment',
+        '91–93 quality',
+        'Rate limited',
       ],
-      cta: 'Choose Builder',
-      highlight: false,
-    },
-    {
-      name: 'Pro',
-      price: '$29.98',
-      period: '/ user / mo',
-      best: 'Teams & power users\nEarly agent adopters',
-      features: [
-        'Unlimited repos',
-        'Guided clarification interviews (Tier 2)',
-        'Early / basic agent features',
-        'Advanced tool depth',
-        'Priority model routing',
-        'Team workspaces',
-      ],
-      cta: 'Choose Pro',
+      cta: 'Start Free',
       highlight: true,
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      best: 'Companies running agents in production\nSecurity/compliance teams',
+      name: 'Builder',
+      price: '$19.98',
+      period: '/ user / mo',
+      best: 'Serious individual builders\nDaily power users',
       features: [
-        'Full agent hardening (GitAgent first)',
-        'Custom policy engine (Tier 3)',
-        'Lightweight runtime simulation & replay',
-        'Synthetic test generation',
-        'SSO/SCIM/RBAC + audit logs',
-        'On-prem / private deployment options',
-        'Dedicated success + SLA',
+        'Unlimited repos',
+        'Priority Speed',
+        'Advance Scoring',
+        'Guided Enrichment',
+        'Export Bundles',
+        'Priority Support',
       ],
-      cta: 'Contact Sales',
+      cta: 'Choose Builder',
       highlight: false,
     },
   ];
@@ -1305,9 +1295,6 @@ export default function Home() {
           </div>
 
           <div className="hidden items-center justify-end gap-4 md:flex">
-            <a href="#" className="text-sm font-medium text-gray-400 transition-colors hover:text-white">
-              Login
-            </a>
               <a
               href={githubRepoUrl}
               className="rounded-xl bg-[#2DD4BF] px-5 py-2 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
@@ -1341,7 +1328,15 @@ export default function Home() {
       </nav>
 
       <main>
-        <section className="relative min-h-screen flex items-center pt-16 overflow-hidden bg-[#050506]">
+        {/* ── ANNOUNCEMENT ── */}
+        <div className="mt-16 border-b border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.06] px-4 py-2.5 text-center">
+          <p className="text-xs font-medium text-[#2DD4BF]">
+            <span className="mr-2 inline-flex items-center rounded-md border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Pre-release</span>
+            Some features are still in development and will be available soon.
+          </p>
+        </div>
+
+        <section className="relative min-h-screen flex items-center overflow-hidden bg-[#050506]">
           <div className="absolute inset-0 pointer-events-none">
             <HeroParticles />
           </div>
@@ -1356,7 +1351,7 @@ export default function Home() {
                   </span>
                 </div>
 
-                <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight">
+                <h1 className="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
                   Most agent tools work in demos.{' '}
                   <span className="text-[#2DD4BF]">They break in production.</span>
                 </h1>
@@ -1377,13 +1372,6 @@ export default function Home() {
                     className="inline-flex items-center gap-2 bg-[#2DD4BF] text-[#0A0F1E] font-medium px-5 py-2 rounded-xl hover:bg-[#22B8A6] transition-all hover:scale-105 text-sm"
                   >
                     Try It — Connect GitHub
-                  </a>
-                  <a
-                    href={githubRepoUrl}
-                    className="inline-flex items-center gap-2 border border-white/20 text-white font-medium px-5 py-2 rounded-xl hover:border-[#2DD4BF]/50 hover:text-[#2DD4BF] transition-all text-sm"
-                  >
-                    <Play className="w-4 h-4" />
-                    Watch 45-second demo
                   </a>
                 </div>
               </div>
@@ -1413,6 +1401,82 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BENEFITS ── */}
+        <section className="bg-[#050506] py-28 lg:py-32 border-t border-white/5">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-14 text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Benefits</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Why Teams Use Trustabl</h2>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {[
+                {
+                  icon: <Zap className="h-5 w-5" />,
+                  title: 'Higher Agent Success Rate',
+                  desc: <>Agents complete tasks more <span className="text-[#2DD4BF]">reliably</span> by using the <span className="text-[#2DD4BF]">right tools at the right time</span>.</>,
+                },
+                {
+                  icon: <DollarSign className="h-5 w-5" />,
+                  title: 'Lower Token & API Costs',
+                  desc: <>Reduce <span className="text-[#2DD4BF]">wasted tokens</span> and <span className="text-[#2DD4BF]">expensive retries</span> through <span className="text-[#2DD4BF]">smarter tool definitions</span>.</>,
+                },
+                {
+                  icon: <Activity className="h-5 w-5" />,
+                  title: 'Faster Debugging & Observability',
+                  desc: <>Turn agent behavior from a <span className="text-[#2DD4BF]">black box</span> into something you can actually <span className="text-[#2DD4BF]">trace and debug</span>.</>,
+                },
+                {
+                  icon: <Clock className="h-5 w-5" />,
+                  title: 'Less Manual Hardening Work',
+                  desc: <>Automatically generate <span className="text-[#2DD4BF]">production-grade metadata</span> that would otherwise take <span className="text-[#2DD4BF]">hours or days</span> to create manually.</>,
+                },
+                {
+                  icon: <ShieldCheck className="h-5 w-5" />,
+                  title: 'Stronger Security & Compliance',
+                  desc: <>Get <span className="text-[#2DD4BF]">least-privilege policies</span>, <span className="text-[#2DD4BF]">audit trails</span>, and <span className="text-[#2DD4BF]">supply chain attestations</span> by default.</>,
+                },
+                {
+                  icon: <Settings2 className="h-5 w-5" />,
+                  title: 'Future-Proof Integrations',
+                  desc: <>Works seamlessly with <span className="text-[#2DD4BF]">modern agent frameworks and runtimes</span> out of the box.</>,
+                },
+                {
+                  icon: <TrendingUp className="h-5 w-5" />,
+                  title: 'Continuous Improvement',
+                  desc: <>Tools get better over time using <span className="text-[#2DD4BF]">real runtime feedback</span>.</>,
+                },
+              ].map((card) => (
+                <div key={card.title} className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
+                    {card.icon}
+                  </div>
+                  <h3 className="text-base font-semibold text-white">{card.title}</h3>
+                  <p className="flex-1 text-sm leading-relaxed text-gray-400">{card.desc}</p>
+                  <button className="flex items-center gap-1.5 text-xs font-medium text-[#2DD4BF] transition-colors hover:text-white">
+                    Learn how
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+
+              {/* Summary CTA card */}
+              <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.04] p-6 text-center">
+                <h3 className="text-base font-semibold text-white">See everything Trustabl generates</h3>
+                <p className="text-sm text-gray-400">See the complete list of metadata fields Trustabl generates</p>
+                <a href="/products" className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-[#2DD4BF]/30 px-4 py-2 text-xs font-semibold text-[#2DD4BF] transition-colors hover:bg-[#2DD4BF]/10">
+                  View Products
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
               </div>
             </div>
           </div>
@@ -1767,10 +1831,63 @@ export default function Home() {
           </div>
         </section>
 
+
+        <section id="pricing" className="bg-[#050506] py-28 lg:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Pricing</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Start free. Upgrade when you are ready.</h2>
+            </div>
+
+            <div className="mt-14 mx-auto grid max-w-4xl gap-5 md:grid-cols-3">
+              {pricingTiers.map((tier) => (
+                <div
+                  key={tier.name}
+                  className={`relative flex h-full flex-col rounded-3xl p-7 ${
+                    tier.highlight
+                      ? 'border-2 border-[#2DD4BF] bg-[#0D1614]'
+                      : 'border border-white/8 bg-[#0D0D10]'
+                  }`}
+                >
+                  <div className="mb-2">
+                    <h3 className={`text-base font-bold ${tier.highlight ? 'text-[#2DD4BF]' : 'text-white'}`}>{tier.name}</h3>
+                    <p className="mt-1 whitespace-pre-line text-sm text-gray-400">{tier.best}</p>
+                  </div>
+
+                  <div className="my-6">
+                    <span className="text-4xl font-bold text-white">{tier.price}</span>
+                    {tier.period && <span className="ml-1.5 text-sm text-gray-500">{tier.period}</span>}
+                  </div>
+
+                  <ul className="mb-8 flex-1 space-y-2.5 text-sm text-gray-300">
+                    {tier.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <span className="text-[#2DD4BF]">✓</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <a
+                    href={githubRepoUrl}
+                    className={`inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all ${
+                      tier.highlight
+                        ? 'bg-[#2DD4BF] text-[#08121F] hover:bg-[#22B8A6]'
+                        : 'bg-white/8 text-white hover:bg-white/12'
+                    }`}
+                  >
+                    {tier.cta}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ATM Diagram Section */}
         <section id="atm" className="bg-[#050506] py-28 lg:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
+            <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Agentic Tool Metadata</p>
               <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">ATM makes every layer of the stack better</h2>
               <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-gray-400">
@@ -1778,29 +1895,138 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Desktop diagram */}
+            <div className="hidden lg:block">
+              {(() => {
+                // Layout (px): 3 cards h-[120px], gap-5 (20px) between rows
+                // Total H = 3×120 + 2×20 = 400. Row midpoints: 60, 200, 340.
+                // cardW=340, 20px gap to rail, center channel=180px.
+                // leftRail=360, rightRail=540, cx=450
+                const W = 900, H = 400;
+                const cardW = 340;
+                const leftRailX = cardW + 20;      // 360
+                const rightRailX = W - cardW - 20; // 540
+                const cx = W / 2;                  // 450
+                const logoSize = 60;
+                const logoX = cx - logoSize / 2;   // 420
+                const logoY = 200 - logoSize / 2;  // 170
+                const rows = [60, 200, 340];
+                const lineColor = 'rgba(45,212,191,0.25)';
+                const dotColor = '#2DD4BF';
+
+                const leftNodes = [
+                  { id: 'openshell', icon: <Monitor className="h-4 w-4" />, title: 'NVIDIA OpenShell', desc: 'Least-privilege sandbox policies' },
+                  { id: 'harness',   icon: <Wrench className="h-4 w-4" />,  title: 'Agent Harness',   desc: 'Native integration (MCP, GitAgent)' },
+                  { id: 'judge',     icon: <FileText className="h-4 w-4" />,title: 'LLM-as-Judge',    desc: 'Reduced load, smarter high risk policy' },
+                ];
+                const rightNodes = [
+                  { id: 'llm',      icon: <Cpu className="h-4 w-4" />,   title: 'LLM Model',       desc: 'Better tool calling accuracy' },
+                  { id: 'agent',    icon: <Zap className="h-4 w-4" />,   title: 'Agent Runtime',   desc: 'Resilient execution and self-recovery' },
+                  { id: 'devtools', icon: <Code2 className="h-4 w-4" />, title: 'IDE / Dev Tools', desc: 'Superior prompting and docs' },
+                ];
+
+                return (
+                  <div className="mx-auto" style={{ width: W }}>
+                    {/* Supply chain — centered within 900px wrapper */}
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
+                          <Link2 className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">Supply Chain</p>
+                          <p className="text-[11px] text-gray-500">SLSA + Sigstore attestations</p>
+                        </div>
+                      </div>
+                      <div className="h-8 w-px bg-[#2DD4BF]/25" />
+                    </div>
+
+                    {/* Diagram area: fixed 900×520, SVG lines + absolutely positioned cards */}
+                    <div className="relative" style={{ width: W, height: H }}>
+
+                      {/* SVG lines */}
+                      <svg className="pointer-events-none absolute inset-0" width={W} height={H}>
+                        {/* Center vertical: supply-chain connector → logo top */}
+                        <line x1={cx} y1={0} x2={cx} y2={logoY} stroke={lineColor} strokeWidth="1" />
+                        {/* Left vertical rail: row0 midpoint → row2 midpoint */}
+                        <line x1={leftRailX} y1={rows[0]} x2={leftRailX} y2={rows[2]} stroke={lineColor} strokeWidth="1" />
+                        {/* Right vertical rail */}
+                        <line x1={rightRailX} y1={rows[0]} x2={rightRailX} y2={rows[2]} stroke={lineColor} strokeWidth="1" />
+                        {/* Left rail → logo left edge (at logo vertical center) */}
+                        <line x1={leftRailX} y1={rows[1]} x2={logoX} y2={rows[1]} stroke={lineColor} strokeWidth="1" />
+                        {/* Right rail → logo right edge */}
+                        <line x1={rightRailX} y1={rows[1]} x2={logoX + logoSize} y2={rows[1]} stroke={lineColor} strokeWidth="1" />
+                        {/* Left card → left rail (20px horizontal per row) */}
+                        {rows.map((y) => (
+                          <line key={`hl-${y}`} x1={cardW} y1={y} x2={leftRailX} y2={y} stroke={lineColor} strokeWidth="1" />
+                        ))}
+                        {/* Right rail → right card */}
+                        {rows.map((y) => (
+                          <line key={`hr-${y}`} x1={rightRailX} y1={y} x2={W - cardW} y2={y} stroke={lineColor} strokeWidth="1" />
+                        ))}
+                        {/* Dots at rail intersections */}
+                        {rows.map((y) => (
+                          <g key={`d-${y}`}>
+                            <circle cx={leftRailX} cy={y} r="5" fill={dotColor} />
+                            <circle cx={rightRailX} cy={y} r="5" fill={dotColor} />
+                          </g>
+                        ))}
+                      </svg>
+
+                      {/* Left cards — width=340, starts at x=0, ends at x=340 (rail at 360) */}
+                      <div className="absolute left-0 top-0 flex flex-col gap-5" style={{ width: cardW }}>
+                        {leftNodes.map((node) => (
+                          <div key={node.id} className="flex h-[120px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-5 transition-colors hover:border-[#2DD4BF]/30">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
+                              <span className="text-sm font-semibold text-white">{node.title}</span>
+                            </div>
+                            <p className="text-xs leading-relaxed text-gray-400">{node.desc}</p>
+                            <button type="button" onClick={() => setAtmModal(node.id)} className="self-start text-xs font-medium text-[#2DD4BF] hover:underline">See more</button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Center logo */}
+                      <div className="absolute z-10" style={{ left: logoX, top: logoY, width: logoSize, height: logoSize }}>
+                        <div className="flex h-full w-full items-center justify-center rounded-2xl border border-[#2DD4BF]/30 bg-[#0B0B0D]" style={{ animation: 'coreGlow 2s ease-in-out infinite' }}>
+                          <svg className="h-8 w-8" viewBox="0 0 612 633" fill="#2DD4BF">
+                            <path d="M150.066 523.027C150.066 523.027 266.828 630.601 300.296 632.297C333.764 633.992 552.581 495.592 581.992 243.134C581.992 243.134 470.79 353.155 468.772 357.964C466.754 362.772 394.924 505.231 298.514 544.173L150.066 523.027Z"/>
+                            <path d="M206.247 374.515L300.403 460.278L605.928 152.563C605.928 152.563 615.353 137.987 609.9 122.144C604.447 106.301 581.133 92.3682 581.133 92.3682C581.133 92.3682 563.895 88.6973 548.932 98.9588C533.969 109.22 298.407 349.012 298.407 349.012L206.226 374.537L206.247 374.515Z"/>
+                            <path d="M393.896 3.21383C393.896 3.21383 181.819 -13.3805 133.496 28.846C133.496 28.846 101.38 53.1901 94.6396 120.104C94.6396 120.104 181.969 78.3929 268.419 83.3519C354.868 88.3109 393.918 3.21383 393.918 3.21383H393.896Z"/>
+                            <path d="M186.241 8.51621C186.241 8.51621 83.1752 24.0372 13.5991 76.0958C-7.67515 92.0032 -4.69113 181.286 27.5315 209.173C46.058 225.187 206.227 374.515 206.227 374.515C206.227 374.515 246.693 379.581 275.094 368.762L298.408 348.99C298.408 348.99 97.8589 169.308 95.841 145.951C93.823 122.594 109.022 36.703 186.219 8.49475L186.241 8.51621Z"/>
+                            <path d="M341.599 209.345V117.764C341.599 117.764 351.238 81.4414 387.389 86.336C423.54 91.2306 452.951 101.707 470.533 92.583C488.115 83.4593 497.732 59.8881 479.742 28.4597C461.752 -2.96868 366.179 -0.693158 344.647 11.9941C323.116 24.6814 270.37 50.2706 262.771 104.519V231.928C262.771 231.928 278.571 266.405 300.875 264.044C323.18 261.682 332.475 256.788 341.256 235.814L341.599 209.366V209.345Z"/>
+                            <path d="M298.516 544.173C298.516 544.173 181.067 467.126 143.22 375.696C143.22 375.696 122.44 329.391 82.5531 353.735C82.5531 353.735 48.4198 371.317 67.0107 404.098C85.6015 436.878 125.896 502.118 150.863 523.736C150.863 523.736 214.363 578.821 298.516 544.173Z"/>
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Right cards */}
+                      <div className="absolute right-0 top-0 flex flex-col gap-5" style={{ width: cardW }}>
+                        {rightNodes.map((node) => (
+                          <div key={node.id} className="flex h-[120px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-5 transition-colors hover:border-[#2DD4BF]/30">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
+                              <span className="text-sm font-semibold text-white">{node.title}</span>
+                            </div>
+                            <p className="text-xs leading-relaxed text-gray-400">{node.desc}</p>
+                            <button type="button" onClick={() => setAtmModal(node.id)} className="self-start text-xs font-medium text-[#2DD4BF] hover:underline">See more</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Mobile fallback */}
+            <div className="grid gap-5 sm:grid-cols-2 lg:hidden">
               {atmComponents.map((comp) => (
-                <div
-                  key={comp.id}
-                  className="flex flex-col rounded-3xl border border-white/8 bg-[#141419] p-6"
-                >
+                <div key={comp.id} className="flex flex-col rounded-3xl border border-white/8 bg-[#141419] p-6">
                   <h3 className="mb-1 font-bold text-white">{comp.title}</h3>
                   <p className="mb-4 text-sm text-gray-400">{comp.tagline}</p>
-                  <ul className="flex-1 space-y-2 text-sm text-gray-300">
-                    {comp.preview.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#2DD4BF]" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    onClick={() => setAtmModal(comp.id)}
-                    className="mt-5 self-start text-xs font-medium text-[#2DD4BF] hover:underline"
-                  >
-                    more&hellip;
-                  </button>
+                  <button type="button" onClick={() => setAtmModal(comp.id)} className="mt-auto self-start text-xs font-medium text-[#2DD4BF] hover:underline">more&hellip;</button>
                 </div>
               ))}
             </div>
@@ -1811,22 +2037,10 @@ export default function Home() {
             const comp = atmComponents.find(c => c.id === atmModal);
             if (!comp) return null;
             return (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                onClick={() => setAtmModal(null)}
-              >
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setAtmModal(null)}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-                <div
-                  className="relative mx-auto w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#0F0F12] p-8 shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setAtmModal(null)}
-                    className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white"
-                  >
-                    ✕
-                  </button>
+                <div className="relative mx-auto w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#0F0F12] p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" onClick={() => setAtmModal(null)} className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white">✕</button>
                   <p className="mb-1 text-xs font-medium uppercase tracking-[0.22em] text-[#2DD4BF]">Agentic Tool Metadata</p>
                   <h3 className="mb-2 text-2xl font-bold text-white">{comp.title}</h3>
                   <p className="mb-6 text-sm text-gray-400">{comp.tagline}</p>
@@ -1844,65 +2058,6 @@ export default function Home() {
           })()}
         </section>
 
-        <section id="pricing" className="bg-[#050506] py-28 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Pricing</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Start free. Upgrade when you are ready.</h2>
-            </div>
-
-            <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {pricingTiers.map((tier) => (
-                <div
-                  key={tier.name}
-                  className={`relative flex h-full flex-col rounded-3xl p-6 ${
-                    tier.highlight
-                      ? 'border-2 border-[#2DD4BF] bg-[#2DD4BF]/10 shadow-xl shadow-[#2DD4BF]/10'
-                      : 'border border-white/8 bg-[#141419]'
-                  }`}
-                >
-                  {tier.highlight && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="rounded-full bg-[#2DD4BF] px-3 py-1 text-[9px] font-medium uppercase tracking-[0.24em] text-[#08121F]">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="mb-4">
-                    <h3 className="mb-1 font-bold text-white">{tier.name}</h3>
-                    <p className="whitespace-pre-line text-xs text-gray-500">{tier.best}</p>
-                  </div>
-
-                  <div className="mb-6">
-                    <span className={`text-4xl font-semibold tracking-[0.02em] ${tier.highlight ? 'text-[#2DD4BF]' : 'text-white'}`}>
-                      {tier.price}
-                    </span>
-                    {tier.period && <span className="ml-1.5 text-xs text-gray-500">{tier.period}</span>}
-                  </div>
-
-                  <ul className="mb-6 flex-1 space-y-2 text-sm text-gray-300">
-                    {tier.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <span className={tier.highlight ? 'text-[#2DD4BF]' : 'text-gray-600'}>✓</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={githubRepoUrl}
-                    className={`inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-                      tier.highlight ? 'bg-[#2DD4BF] text-[#08121F] hover:bg-[#22B8A6]' : 'bg-white/5 text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {tier.cta}
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
         {/* FAQ Section */}
         <section id="faq" className="bg-[#050506] py-28 lg:py-32">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">

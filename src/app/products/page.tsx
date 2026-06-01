@@ -229,9 +229,6 @@ export default function ProductsPage() {
           </div>
 
           <div className="hidden items-center justify-end gap-4 md:flex">
-            <a href="#" className="text-sm font-medium text-gray-400 transition-colors hover:text-white">
-              Login
-            </a>
             <a
               href={GITHUB_URL}
               target="_blank"
@@ -270,6 +267,13 @@ export default function ProductsPage() {
       </nav>
 
       <main className="pt-16">
+        {/* ── ANNOUNCEMENT ── */}
+        <div className="border-b border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.06] px-4 py-2.5 text-center">
+          <p className="text-xs font-medium text-[#2DD4BF]">
+            <span className="mr-2 inline-flex items-center rounded-md border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Pre-release</span>
+            Some features are still in development and will be available soon.
+          </p>
+        </div>
 
         {/* ── HERO ── */}
         <section className="relative border-b border-white/8 py-24 md:py-32 overflow-hidden">
