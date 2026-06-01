@@ -1,11 +1,171 @@
 'use client';
 
-import { useState } from 'react';
-import { Space_Grotesk, Inter } from 'next/font/google';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { Bot, Search, Network, ShieldCheck, Gauge, Terminal, Package, Copy, Check } from 'lucide-react';
 
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
-const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500'] });
+function HeroParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const context = ctx;
+
+    const dpr = window.devicePixelRatio || 1;
+
+    function getCenter() {
+      return { x: canvas!.offsetWidth / 2, y: canvas!.offsetHeight / 2 };
+    }
+
+    const MAX_SPEED = 0.48;
+    const TRAIL = 6;
+    const N = 145;
+    const DRAG = 0.996;
+    const SPAWN_MARGIN = 48;
+
+    type Particle = {
+      x: number; y: number; vx: number; vy: number;
+      size: number; opacity: number; trail: [number, number][];
+      teal: boolean; age: number; swirl: number; swirlSpeed: number; wobble: number;
+    };
+
+    function createParticle(x: number, y: number): Particle {
+      return {
+        x, y,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        size: 0.45 + Math.random() * 0.95,
+        opacity: 0.1 + Math.random() * 0.22,
+        trail: [],
+        teal: Math.random() < 0.12,
+        age: 0,
+        swirl: Math.random() * Math.PI * 2,
+        swirlSpeed: 0.0018 + Math.random() * 0.0018,
+        wobble: 0.0008 + Math.random() * 0.0012,
+      };
+    }
+
+    function spawnAnywhere(): Particle {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      return createParticle(Math.random() * w, Math.random() * h);
+    }
+
+    function spawnFromEdge(): Particle {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      const side = Math.floor(Math.random() * 4);
+      let x = 0, y = 0;
+      if (side === 0) { x = -SPAWN_MARGIN; y = Math.random() * h; }
+      else if (side === 1) { x = w + SPAWN_MARGIN; y = Math.random() * h; }
+      else if (side === 2) { x = Math.random() * w; y = -SPAWN_MARGIN; }
+      else { x = Math.random() * w; y = h + SPAWN_MARGIN; }
+      return createParticle(x, y);
+    }
+
+    let particles: Particle[] = [];
+
+    function resetParticles() {
+      particles = Array.from({ length: N }, spawnAnywhere);
+      context.clearRect(0, 0, canvas!.offsetWidth, canvas!.offsetHeight);
+    }
+
+    function resize() {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      canvas!.width = w * dpr;
+      canvas!.height = h * dpr;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      resetParticles();
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    let raf = 0;
+    function draw() {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      context.clearRect(0, 0, w, h);
+      const center = getCenter();
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const dx = center.x - p.x;
+        const dy = center.y - p.y;
+        const dist = Math.hypot(dx, dy);
+        const safeDist = Math.max(dist, 1);
+        p.age += 1;
+
+        if (p.x < -SPAWN_MARGIN || p.x > w + SPAWN_MARGIN || p.y < -SPAWN_MARGIN || p.y > h + SPAWN_MARGIN) {
+          particles[i] = spawnFromEdge();
+          continue;
+        }
+
+        p.swirl += p.swirlSpeed;
+        const nx = dx / safeDist;
+        const ny = dy / safeDist;
+        const tangentialX = -ny;
+        const tangentialY = nx;
+        const drift = Math.sin(p.swirl) * 0.02;
+        p.vx += tangentialX * drift + Math.cos(p.swirl * 0.7) * p.wobble;
+        p.vy += tangentialY * drift + Math.sin(p.swirl * 0.7) * p.wobble;
+        p.vx += Math.sin(p.age * 0.012 + p.swirl) * 0.006;
+        p.vy += Math.cos(p.age * 0.011 + p.swirl) * 0.006;
+        p.vx *= DRAG;
+        p.vy *= DRAG;
+
+        const speed = Math.hypot(p.vx, p.vy);
+        if (speed > MAX_SPEED) {
+          p.vx = (p.vx / speed) * MAX_SPEED;
+          p.vy = (p.vy / speed) * MAX_SPEED;
+        }
+
+        p.trail.push([p.x, p.y]);
+        if (p.trail.length > TRAIL) p.trail.shift();
+        p.x += p.vx;
+        p.y += p.vy;
+
+        const centerFade = 0.85 - Math.min(0.35, dist / Math.max(w, h) * 0.25);
+        const alpha = p.opacity * centerFade;
+
+        if (speed > 0.12 && p.trail.length > 2) {
+          for (let t = 1; t < p.trail.length; t++) {
+            const tf = t / p.trail.length;
+            context.beginPath();
+            context.moveTo(p.trail[t - 1][0], p.trail[t - 1][1]);
+            context.lineTo(p.trail[t][0], p.trail[t][1]);
+            context.strokeStyle = p.teal
+              ? `rgba(45,212,191,${alpha * tf * 0.18})`
+              : `rgba(220,232,255,${alpha * tf * 0.14})`;
+            context.lineWidth = p.size * tf * 0.35;
+            context.lineCap = 'round';
+            context.stroke();
+          }
+        }
+
+        context.beginPath();
+        context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        context.fillStyle = p.teal ? `rgba(45,212,191,${alpha})` : `rgba(220,232,255,${alpha})`;
+        context.fill();
+      }
+
+      raf = requestAnimationFrame(draw);
+    }
+
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full pointer-events-none" />;
+}
 
 const GITHUB_URL = 'https://github.com/trustabl/trustabl';
 
@@ -22,7 +182,15 @@ const CheckIcon = ({ className }: { className?: string }) => (
 );
 
 export default function ProductsPage() {
-  const [activeTab, setActiveTab] = useState<'npm' | 'python' | 'go'>('npm');
+  const [activeTab, setActiveTab] = useState<'homebrew' | 'scoop' | 'docker'>('homebrew');
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+
+  function copyCmd(cmd: string) {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCmd(cmd);
+    setTimeout(() => setCopiedCmd(null), 2000);
+  }
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const installCmds = {
     npm:    'npm install @trustabl/analyzer',
@@ -30,91 +198,100 @@ export default function ProductsPage() {
     go:     'go install github.com/trustabl/trustabl/cmd/trustabl@latest',
   };
 
+  const navLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Products', href: '/products' },
+    { label: 'How it Works', href: '/#how-it-works' },
+    { label: 'NVIDIA', href: '/#openshell' },
+    { label: 'Pricing', href: '/#pricing' },
+  ];
+
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-200 ${inter.className}`}>
+    <div className="min-h-screen overflow-x-hidden bg-[#050506] text-white">
 
       {/* ── NAVBAR ── */}
-      <header className="sticky top-0 z-50">
-        {/* Primary nav */}
-        <div className="border-b border-slate-800 bg-slate-950/95 backdrop-blur-md">
-          <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-6">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800">
-                <span className={`text-base font-bold text-white ${spaceGrotesk.className}`}>T</span>
-              </div>
-              <span className={`text-lg font-semibold text-white ${spaceGrotesk.className}`}>Trustabl</span>
-            </Link>
+      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/5 bg-[#050506]/85 backdrop-blur-md">
+        <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6">
+          <Link href="/" className="justify-self-start">
+            <Image src="/trustabl-logo.svg" alt="Trustabl" width={1236} height={295} priority className="h-7 w-auto" />
+          </Link>
 
-            <nav className="hidden md:flex">
-              <a href="#" className={`relative px-4 py-2 text-sm font-semibold text-white ${spaceGrotesk.className}`}>
-                Products
-                <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" />
-              </a>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden items-center gap-2 rounded-2xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white md:flex"
+          <div className="hidden items-center justify-center gap-8 text-sm font-medium text-gray-400 md:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={`transition-colors duration-200 hover:text-white ${link.href === '/products' ? 'text-white' : ''}`}
               >
-                <GithubIcon className="h-4 w-4" />
-                Star on GitHub
-              </a>
-              <a
-                href="#quickstart"
-                className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100 active:scale-[0.985]"
-              >
-                Get Started
-              </a>
-            </div>
+                {link.label}
+              </Link>
+            ))}
           </div>
-        </div>
 
-        {/* Secondary nav */}
-        <div className="border-b border-slate-800/60 bg-slate-900/80 backdrop-blur-md">
-          <div className="mx-auto flex h-10 max-w-[1200px] items-center gap-6 px-6">
-            <a href="#" className="text-xs font-medium text-slate-400 transition-colors hover:text-slate-200">Documentation</a>
-            <a href="#" className="text-xs font-medium text-slate-400 transition-colors hover:text-slate-200">Blog</a>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-slate-200">
-              <GithubIcon className="h-3.5 w-3.5" />
-              GitHub
+          <div className="hidden items-center justify-end gap-4 md:flex">
+            <a href="#" className="text-sm font-medium text-gray-400 transition-colors hover:text-white">
+              Login
             </a>
             <a
-              href="trustabl-analyzer-landing.md"
-              title="Clean Markdown version optimized for AI agents"
-              className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-[#2DD4BF] px-5 py-2 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
             >
-              <span>🤖</span>
-              For Agents (.md)
+              Try It
             </a>
           </div>
-        </div>
-      </header>
 
-      <main>
+          <button
+            className="justify-self-end text-gray-400 transition-colors hover:text-white md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen
+              ? <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              : <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            }
+          </button>
+        </div>
+
+        {menuOpen && (
+          <div className="border-t border-white/5 bg-[#050506]/98 px-4 py-5 backdrop-blur-md md:hidden">
+            <div className="space-y-4">
+              {navLinks.map((link) => (
+                <Link key={link.label} href={link.href} className="block text-sm text-gray-300 hover:text-white">
+                  {link.label}
+                </Link>
+              ))}
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="block rounded-xl bg-[#2DD4BF] px-5 py-2.5 text-center text-sm font-medium text-[#08121F]">
+                Try It
+              </a>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <main className="pt-16">
+
         {/* ── HERO ── */}
-        <section className="border-b border-slate-800 py-24 md:py-32">
-          <div className="mx-auto max-w-[1200px] px-6 text-center">
-            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-slate-700 bg-slate-900 px-4 py-2">
+        <section className="relative border-b border-white/8 py-24 md:py-32 overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <HeroParticles />
+          </div>
+          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 text-center">
+            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-[#2DD4BF]/25 bg-[#2DD4BF]/10 px-4 py-2">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2DD4BF] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2DD4BF]" />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-300">Open Source</span>
-              <span className="h-4 w-px bg-slate-700" />
-              <span className="text-xs text-slate-400">Apache 2.0</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-[#2DD4BF]">Open Source</span>
+              <span className="h-4 w-px bg-[#2DD4BF]/30" />
+              <span className="text-xs text-gray-400">Apache 2.0</span>
             </div>
 
-            <h1 className={`text-6xl font-bold tracking-tight text-white md:text-7xl ${spaceGrotesk.className}`}>
-              Trustabl<br />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                Agent Analyzer
-              </span>
+            <h1 className="text-6xl font-black tracking-tight text-white md:text-7xl">
+              Trustabl <span className="text-[#2DD4BF]">Agent Analyzer</span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-xl text-slate-300 md:text-2xl">
+            <p className="mt-6 text-xl font-light leading-relaxed text-gray-300 md:text-2xl">
               Static analysis for reliable, safe, and production-ready AI agents.
             </p>
 
@@ -123,77 +300,162 @@ export default function ProductsPage() {
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-3xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100 active:scale-[0.985]"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#08121F] transition-all hover:bg-gray-100 active:scale-[0.985]"
               >
+                View on GitHub
                 <GithubIcon className="h-5 w-5" />
-                Get Started on GitHub
               </a>
               <a
-                href="#"
-                className="inline-flex items-center gap-2 rounded-3xl border border-slate-700 bg-slate-900 px-7 py-3.5 text-sm font-medium text-slate-300 transition-all hover:border-slate-500 hover:text-white active:scale-[0.985]"
+                href="#quickstart"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:border-[#2DD4BF]/50 hover:text-[#2DD4BF]"
               >
-                Read the Docs
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                Install &amp; Scan in 60 seconds
+              </a>
+            </div>
+
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <div className="flex -space-x-2">
+                {[
+                  'https://randomuser.me/api/portraits/women/44.jpg',
+                  'https://randomuser.me/api/portraits/men/32.jpg',
+                  'https://randomuser.me/api/portraits/women/68.jpg',
+                ].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt="avatar"
+                    className="h-8 w-8 rounded-full border-2 border-[#050506] object-cover"
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-gray-400">
+                Trusted by forward-deployed AI engineers &amp; <span className="font-semibold text-gray-300">platform teams</span>
+              </p>
+            </div>
+
+            <div className="mx-auto mt-10 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10">
+                  <Bot className="h-4 w-4 text-[#2DD4BF]" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-white">Also available for AI agents</p>
+                  <p className="text-xs text-gray-400">Clean Markdown version — easy for agents to discover, read, parse, and deploy</p>
+                </div>
+              </div>
+              <a
+                href="trustabl-analyzer-landing.md"
+                className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[#2DD4BF]/40 hover:text-[#2DD4BF] whitespace-nowrap"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
+                View / Download .md
               </a>
             </div>
           </div>
         </section>
 
+        {/* ── AGENT RELIABILITY GAP ── */}
+        <section className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <div>
+                <p className="mb-4 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">The Agent Reliability Gap</p>
+                <h2 className="text-4xl font-semibold leading-tight text-white lg:text-5xl">
+                  Your agents work in demos. They break in production.
+                </h2>
+              </div>
+              <div className="space-y-5 text-gray-400">
+                <p className="text-base leading-relaxed">
+                  Most agent code is &ldquo;vibe coded&rdquo; — tools with missing schemas, subagents granted dangerous permissions, shell access without guardrails, and no traceability between agents and capabilities.
+                </p>
+                <p className="text-base leading-relaxed">
+                  Trustabl Agent Analyzer brings{' '}
+                  <strong className="font-semibold text-white">deterministic, SDK-aware static analysis</strong>
+                  {' '}to the agent layer — the missing foundation for Trust as Code.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── STATS BAR ── */}
+        <section className="border-b border-white/8 bg-white/[0.02] py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+              {[
+                { stat: '4', label: 'Major SDKs supported', detail: 'Claude • OpenAI • Google ADK • MCP' },
+                { stat: '0', label: 'Runtime required', detail: 'Pure static • Single binary • Offline' },
+                { stat: '3', label: 'Output formats', detail: 'Human • JSON • SARIF 2.1' },
+                { stat: '100%', label: 'Deterministic', detail: 'Byte-stable scans for reliable CI' },
+              ].map((item) => (
+                <div key={item.stat} className="flex flex-col gap-2">
+                  <span className="text-5xl font-semibold tracking-tight text-[#2DD4BF]">{item.stat}</span>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">{item.label}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-300 whitespace-nowrap">{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── CORE ANALYSIS ── */}
-        <section className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <div className="mb-14 text-center">
-              <h2 className={`text-3xl font-bold text-white md:text-4xl ${spaceGrotesk.className}`}>
-                What Trustabl Agent Analyzer detects
-              </h2>
-              <p className="mt-3 text-slate-400">Static analysis rules identify gaps in your agent tools</p>
+        <section className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-14 flex items-end justify-between">
+              <div>
+                <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">What makes it different</p>
+                <h2 className="text-4xl font-semibold leading-tight text-white lg:text-5xl">
+                  Purpose-built for agentic systems
+                </h2>
+              </div>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 {
-                  icon: '✓',
-                  iconBg: 'bg-emerald-500/10 text-emerald-400',
-                  title: 'Input & Parameter Validation',
-                  desc: 'Detects missing schema validation, unchecked parameters, and unsafe input handling before they cause runtime failures.',
-                  issue: 'No input schema defined for tool parameters',
+                  icon: <Search className="h-5 w-5" />,
+                  title: 'SDK-Aware Analysis',
+                  desc: 'Understands the specific idioms of Claude Agent SDK, OpenAI Agents SDK, Google ADK, and MCP. Rules only apply where they make sense.',
                 },
                 {
-                  icon: '⚙',
-                  iconBg: 'bg-indigo-500/10 text-indigo-400',
-                  title: 'Retry Logic & Resilience',
-                  desc: 'Finds tools with no retry policy, missing backoff strategies, and calls that will loop indefinitely on failure.',
-                  issue: 'Tool has no retry wrapper or backoff policy',
+                  icon: <Network className="h-5 w-5" />,
+                  title: 'Full Agent Graph Modeling',
+                  desc: 'Discovers tools, agents, subagents, skills, slash commands, and the relationships between them — not just isolated functions.',
                 },
                 {
-                  icon: '👁',
-                  iconBg: 'bg-purple-500/10 text-purple-400',
-                  title: 'Observability & Monitoring',
-                  desc: 'Identifies tools with no tracing, missing structured logs, and absent metrics hooks that make debugging impossible.',
-                  issue: 'No observability hooks or structured logging found',
+                  icon: <ShieldCheck className="h-5 w-5" />,
+                  title: 'Actionable Findings',
+                  desc: 'Every issue includes a clear explanation, suggested remediation, confidence score, and exact code location. No vague warnings.',
                 },
                 {
-                  icon: '🛡',
-                  iconBg: 'bg-amber-500/10 text-amber-400',
-                  title: 'Guardrails & Safety Constraints',
-                  desc: 'Catches missing applicability checks, absent approval gates, and tools that can trigger dangerous side effects unchecked.',
-                  issue: 'No guardrails or applicability constraints defined',
+                  icon: <Gauge className="h-5 w-5" />,
+                  title: 'Per-Tool Readiness Scores',
+                  desc: 'Get a production readiness score for every tool definition. Overall score is the minimum across your inventory — surfaces the weakest links.',
+                },
+                {
+                  icon: <Terminal className="h-5 w-5" />,
+                  title: 'CI-Native & Deterministic',
+                  desc: 'Byte-stable output, SARIF support, and clear exit codes (0/1/2). Perfect for GitHub Actions, pre-commit hooks, and policy gates.',
+                },
+                {
+                  icon: <Package className="h-5 w-5" />,
+                  title: 'Single Binary. Zero Dependencies.',
+                  desc: 'No daemon, no server, no cloud. Install via Homebrew, Scoop, Docker, or Go. Runs fully offline after initial rule cache.',
                 },
               ].map((card) => (
                 <div
                   key={card.title}
-                  className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-6 transition-transform hover:-translate-y-1"
+                  className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30"
                 >
-                  <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg ${card.iconBg}`}>
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
                     {card.icon}
                   </div>
-                  <h3 className={`text-base font-semibold text-white ${spaceGrotesk.className}`}>{card.title}</h3>
-                  <p className="flex-1 text-sm leading-relaxed text-slate-400">{card.desc}</p>
-                  <div className="rounded-xl border border-slate-700/50 bg-slate-950 px-3 py-2">
-                    <p className="font-mono text-[11px] text-slate-500">{card.issue}</p>
-                  </div>
+                  <h3 className="text-base font-semibold text-white">{card.title}</h3>
+                  <p className="flex-1 text-sm leading-relaxed text-gray-400">{card.desc}</p>
                 </div>
               ))}
             </div>
@@ -201,88 +463,51 @@ export default function ProductsPage() {
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
+        <section className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
-              <h2 className={`text-3xl font-bold text-white md:text-4xl ${spaceGrotesk.className}`}>How it works</h2>
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Four steps. Minutes, not days.</h2>
             </div>
 
-            <div className="mx-auto max-w-2xl">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { n: '1', title: 'Scan your repo', desc: 'Point the analyzer at any agent codebase. It reads your tool definitions, schemas, and implementation files.' },
-                { n: '2', title: 'Analyze findings', desc: 'Static rules run across every tool, checking for validation gaps, missing retry logic, observability holes, and guardrail issues.' },
-                { n: '3', title: 'Generate report', desc: 'Get a prioritized report with a Production Readiness Score, severity-ranked findings, and SARIF/JSON/human-readable output.' },
-                { n: '4', title: 'Improve & harden', desc: 'Use findings to guide manual fixes or wait for Auto-Fix (coming June 2026) to apply remediations automatically.' },
-              ].map((step, i, arr) => (
-                <div key={step.n} className="flex gap-5">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-indigo-500 bg-indigo-500/10">
-                      <span className={`text-sm font-bold text-indigo-400 ${spaceGrotesk.className}`}>{step.n}</span>
-                    </div>
-                    {i < arr.length - 1 && <div className="my-1 h-full min-h-[32px] w-px bg-slate-800" />}
-                  </div>
-                  <div className="pb-10">
-                    <h3 className={`text-base font-semibold text-white ${spaceGrotesk.className}`}>{step.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-400">{step.desc}</p>
-                  </div>
+                { n: '01', title: 'Scan your repo', desc: 'Point the analyzer at any agent codebase. It reads your tool definitions, schemas, and implementation files.' },
+                { n: '02', title: 'Analyze findings', desc: 'Static rules run across every tool, checking for validation gaps, missing retry logic, observability holes, and guardrail issues.' },
+                { n: '03', title: 'Generate report', desc: 'Get a prioritized report with a Production Readiness Score, severity-ranked findings, and SARIF/JSON/human-readable output.' },
+                { n: '04', title: 'Improve & harden', desc: 'Use findings to guide manual fixes or wait for Auto-Fix (coming June 2026) to apply remediations automatically.' },
+              ].map((step) => (
+                <div key={step.n} className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30">
+                  <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{step.n}</span>
+                  <h3 className="text-base font-semibold text-white">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-gray-400">{step.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── FEATURES ── */}
-        <section className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <div className="grid gap-5 md:grid-cols-3">
-              {[
-                {
-                  title: 'Open Source & Community Driven',
-                  desc: 'Fully open source under Apache 2.0. Every rule is auditable, forkable, and improvable by the community. No black boxes.',
-                  example: 'Fork the rules, add your own checks, contribute back.',
-                },
-                {
-                  title: 'Production-Ready Rules',
-                  desc: 'Rules are built from real production failures — not academic checklists. Each check maps to a known class of agent failure.',
-                  example: 'Coverage across validation, retry, observability, and guardrails.',
-                },
-                {
-                  title: 'Multiple Output Formats',
-                  desc: 'Output as human-readable text, JSON for tooling, or SARIF for GitHub Code Scanning and CI/CD pipelines.',
-                  example: 'Integrates directly into GitHub Actions and PR checks.',
-                },
-              ].map((f) => (
-                <div key={f.title} className="rounded-3xl border border-slate-800 bg-slate-900 p-7">
-                  <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10">
-                    <CheckIcon className="h-4 w-4 text-emerald-400" />
-                  </div>
-                  <h3 className={`mb-2 text-base font-semibold text-white ${spaceGrotesk.className}`}>{f.title}</h3>
-                  <p className="mb-4 text-sm leading-relaxed text-slate-400">{f.desc}</p>
-                  <p className="text-xs text-slate-500">{f.example}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ── QUICK START ── */}
-        <section id="quickstart" className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
+        <section id="quickstart" className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
-              <h2 className={`text-3xl font-bold text-white md:text-4xl ${spaceGrotesk.className}`}>Quick start</h2>
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Quick start</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Up and running in seconds</h2>
             </div>
 
             <div className="mx-auto max-w-2xl space-y-5">
-              <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
-                <div className="flex border-b border-slate-800">
-                  {(['npm', 'python', 'go'] as const).map((tab) => (
+              {/* Install */}
+              <div className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03]">
+                <div className="flex border-b border-white/8">
+                  {(['homebrew', 'scoop', 'docker'] as const).map((tab) => (
                     <button
                       key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      onClick={() => setActiveTab(tab as never)}
                       className={`px-5 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
                         activeTab === tab
-                          ? 'border-b-2 border-indigo-500 text-indigo-400'
-                          : 'text-slate-500 hover:text-slate-300'
+                          ? 'border-b-2 border-[#2DD4BF] text-[#2DD4BF]'
+                          : 'text-gray-500 hover:text-gray-300'
                       }`}
                     >
                       {tab}
@@ -290,103 +515,148 @@ export default function ProductsPage() {
                   ))}
                 </div>
                 <div className="p-5">
-                  <pre className="overflow-x-auto font-mono text-sm text-emerald-400">{installCmds[activeTab]}</pre>
+                  {activeTab === 'homebrew' && (
+                    <div className="flex items-center justify-between gap-3">
+                      <pre className="flex-1 overflow-x-auto font-mono text-sm text-[#2DD4BF]">brew install trustabl/tap/trustabl</pre>
+                      <button onClick={() => copyCmd('brew install trustabl/tap/trustabl')} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                        {copiedCmd === 'brew install trustabl/tap/trustabl' ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
+                  {activeTab === 'scoop' && (() => {
+                    const scoopCmds = 'scoop bucket add trustabl https://github.com/trustabl/scoop-bucket\nscoop install trustabl';
+                    return (
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-1">
+                          <pre className="overflow-x-auto font-mono text-sm text-[#2DD4BF]">scoop bucket add trustabl https://github.com/trustabl/scoop-bucket</pre>
+                          <pre className="overflow-x-auto font-mono text-sm text-[#2DD4BF]">scoop install trustabl</pre>
+                        </div>
+                        <button onClick={() => copyCmd(scoopCmds)} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                          {copiedCmd === scoopCmds ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    );
+                  })()}
+                  {activeTab === 'docker' && (
+                    <div className="flex items-center justify-between gap-3">
+                      <pre className="flex-1 overflow-x-auto font-mono text-sm text-[#2DD4BF]">{`docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo`}</pre>
+                      <button onClick={() => copyCmd(`docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo`)} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                        {copiedCmd === `docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo` ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
-                <div className="border-b border-slate-800 px-5 py-3">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Scan</span>
+              {/* Scan */}
+              <div className="overflow-hidden rounded-3xl border border-white/8 bg-black/30">
+                <div className="border-b border-white/8 px-5 py-3">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Scan</span>
                 </div>
                 <div className="space-y-2 p-5">
                   {[
-                    { cmd: 'trustabl scan ./my-agent-repo',              comment: '# basic scan' },
-                    { cmd: 'trustabl scan . --strict',                   comment: '# strict mode' },
-                    { cmd: 'trustabl scan . --format sarif > out.sarif', comment: '# SARIF output' },
-                    { cmd: 'trustabl scan . --format json',              comment: '# JSON output' },
+                    { cmd: 'trustabl scan ./path/to/agent-repo', comment: '# local repo' },
+                    { cmd: 'trustabl scan https://github.com/org/repo', comment: '# remote repo' },
+                    { cmd: 'trustabl scan ./repo --format json', comment: '# JSON output' },
+                    { cmd: 'trustabl rules pull', comment: '# update rules' },
                   ].map(({ cmd, comment }) => (
                     <div key={cmd} className="flex items-center gap-3">
-                      <span className="text-slate-600 select-none">$</span>
-                      <pre className="flex-1 overflow-x-auto font-mono text-sm text-slate-300">{cmd}</pre>
-                      <span className="font-mono text-xs text-slate-600">{comment}</span>
+                      <span className="text-gray-600 select-none">$</span>
+                      <pre className="flex-1 overflow-x-auto font-mono text-sm text-gray-300">{cmd}</pre>
+                      <span className="font-mono text-xs text-gray-600">{comment}</span>
+                      <button onClick={() => copyCmd(cmd)} className="flex-shrink-0 text-gray-600 transition-colors hover:text-[#2DD4BF]">
+                        {copiedCmd === cmd ? <Check className="h-3.5 w-3.5 text-[#2DD4BF]" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <p className="text-center text-xs text-slate-500">
-                Also available via{' '}
-                <a href="#" className="text-indigo-400 hover:underline">GitHub Action</a>
+              <p className="text-center text-xs text-gray-500">
+                Also available as a{' '}
+                <a href="https://github.com/trustabl/actions" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">GitHub Action</a>
                 {' · '}
-                <a href="#" className="text-indigo-400 hover:underline">Pre-commit hook</a>
-                {' · '}
-                <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Direct binary download</a>
+                <a href="https://github.com/trustabl/trustabl/releases/latest" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Direct binary download</a>
               </p>
             </div>
           </div>
         </section>
 
         {/* ── ROADMAP ── */}
-        <section className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <div className="mb-14 text-center">
-              <span className="mb-4 inline-block rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                Product Roadmap
-              </span>
-              <h2 className={`mt-4 text-3xl font-bold text-white md:text-4xl ${spaceGrotesk.className}`}>
+        <section className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Product Roadmap</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
                 Starting with open source.<br />Growing into a full platform.
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-slate-400">
+              <p className="mx-auto mt-4 max-w-xl text-gray-400">
                 Trustabl Agent Analyzer is the trustworthy foundation. We&apos;re shipping production hardening capabilities throughout 2026.
               </p>
             </div>
 
-            <div className="mx-auto max-w-2xl space-y-4">
+            {/* Timeline */}
+            <div className="mx-auto max-w-3xl">
               {[
                 {
-                  status: 'NOW',
-                  statusCls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-                  cardBorder: 'border-emerald-500/20',
+                  date: 'Now',
+                  dateCls: 'text-[#2DD4BF]',
+                  dotCls: 'bg-[#2DD4BF] shadow-[0_0_12px_rgba(45,212,191,0.5)]',
                   title: 'Trustabl Agent Analyzer',
                   badge: 'OPEN SOURCE',
-                  badgeCls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
+                  badgeCls: 'bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/25',
                   desc: 'Static analysis, rule-based detection, scoring, SARIF/JSON/human output, GitHub Action ready. Available today on GitHub.',
+                  active: true,
                 },
                 {
-                  status: 'JUN',
-                  statusCls: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-                  cardBorder: 'border-amber-500/20',
+                  date: 'Jun 2026',
+                  dateCls: 'text-amber-400',
+                  dotCls: 'bg-amber-400/40 border border-amber-400/60',
                   title: 'Auto-Fix + OpenShell Features',
                   badge: 'COMING SOON',
                   badgeCls: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
                   desc: 'Automated remediation suggestions and full OpenShell risk surface analysis & hardening. First paid / platform capabilities.',
+                  active: false,
                 },
                 {
-                  status: 'Q3',
-                  statusCls: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-                  cardBorder: 'border-amber-500/20',
+                  date: 'Q3 2026',
+                  dateCls: 'text-gray-500',
+                  dotCls: 'bg-white/10 border border-white/15',
                   title: 'Auto-Enrich',
                   badge: null,
                   badgeCls: '',
                   desc: 'LLM-powered enrichment of findings with deeper context, examples, and custom policy alignment.',
+                  active: false,
                 },
-              ].map((phase) => (
-                <div key={phase.title} className={`flex gap-5 rounded-3xl border bg-slate-900 p-6 ${phase.cardBorder}`}>
-                  <div className="flex-shrink-0 pt-0.5">
-                    <span className={`inline-flex rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${phase.statusCls}`}>
-                      {phase.status}
-                    </span>
+              ].map((phase, i, arr) => (
+                <div key={phase.title} className="flex gap-6">
+                  {/* Date + dot + connector column */}
+                  <div className="relative hidden w-32 flex-shrink-0 flex-col items-end md:flex">
+                    {/* Date + dot row */}
+                    <div className="flex items-center gap-2 pt-6">
+                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
+                      <div className={`h-3 w-3 flex-shrink-0 rounded-full ${phase.dotCls}`} />
+                    </div>
+                    {/* Connector line — only between items */}
+                    {i < arr.length - 1 && (
+                      <div className="mr-[5px] w-px flex-1 bg-white/8" />
+                    )}
                   </div>
-                  <div>
+
+                  {/* Card */}
+                  <div className={`mb-5 flex-1 rounded-3xl border p-6 transition-colors ${phase.active ? 'border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.04]' : 'border-white/8 bg-white/[0.03]'}`}>
+                    <div className="mb-1 flex flex-wrap items-center gap-2 md:hidden">
+                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
+                    </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className={`text-base font-semibold text-white ${spaceGrotesk.className}`}>{phase.title}</h3>
+                      <h3 className="text-base font-semibold text-white">{phase.title}</h3>
                       {phase.badge && (
                         <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${phase.badgeCls}`}>
                           {phase.badge}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{phase.desc}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-400">{phase.desc}</p>
                   </div>
                 </div>
               ))}
@@ -395,49 +665,50 @@ export default function ProductsPage() {
         </section>
 
         {/* ── WHY OPEN SOURCE ── */}
-        <section className="border-b border-slate-800 py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <div className="grid gap-10 lg:grid-cols-[3fr_2fr] lg:items-start">
-              <div>
-                <h2 className={`text-3xl font-bold text-white md:text-4xl ${spaceGrotesk.className}`}>
-                  Why we&apos;re shipping Trustabl Agent Analyzer as open source first
-                </h2>
-                <ul className="mt-8 space-y-5">
-                  {[
-                    'Build trust through transparency. Let the community audit the rules and engine.',
-                    'Establish the de-facto standard for agent reliability analysis before adding paid layers.',
-                    'Enable every AI engineer and platform team to start hardening agents immediately — no gatekeeping.',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                        <CheckIcon className="h-3 w-3 text-emerald-400" />
-                      </div>
-                      <span className="text-sm leading-relaxed text-slate-300">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        <section className="border-b border-white/8 py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-14 text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Why open source</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
+                Why we&apos;re shipping open source first
+              </h2>
+            </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Navigation on this page</p>
-                <p className="mb-3 text-sm leading-relaxed text-slate-400">
-                  This Products page uses a focused primary nav + a lightweight subnav for supporting resources (Docs, Blog, GitHub, and the clean Markdown version optimized for AI agents).
-                </p>
-                <p className="text-sm leading-relaxed text-slate-400">
-                  This keeps the experience clean while making it easy for both humans and agents to navigate supporting content.
-                </p>
-              </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {[
+                {
+                  number: '01',
+                  title: 'Trust through transparency',
+                  desc: 'Every rule is auditable, forkable, and improvable by the community. No black boxes — see exactly what we check and why.',
+                },
+                {
+                  number: '02',
+                  title: 'Set the standard early',
+                  desc: 'Establish the de-facto standard for agent reliability analysis before adding paid layers. The community shapes the foundation.',
+                },
+                {
+                  number: '03',
+                  title: 'No gatekeeping',
+                  desc: 'Every AI engineer and platform team can start hardening agents immediately. Reliability tooling shouldn\'t be locked behind a paywall.',
+                },
+              ].map((item) => (
+                <div key={item.number} className="rounded-3xl border border-white/8 bg-white/[0.03] p-7 transition-colors hover:border-[#2DD4BF]/30">
+                  <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{item.number}</span>
+                  <h3 className="mt-4 text-base font-semibold text-white">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-400">{item.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ── FINAL CTA ── */}
         <section className="py-24">
-          <div className="mx-auto max-w-[1200px] px-6 text-center">
-            <h2 className={`text-4xl font-bold text-white md:text-5xl ${spaceGrotesk.className}`}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
               Ready to make your agents production-grade?
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-slate-400">
+            <p className="mx-auto mt-4 max-w-lg text-gray-400">
               Start with Trustabl Agent Analyzer today. The rest of the platform is coming soon.
             </p>
 
@@ -446,22 +717,22 @@ export default function ProductsPage() {
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-3xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100 active:scale-[0.985]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2DD4BF] px-7 py-3.5 text-sm font-semibold text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
               >
                 <GithubIcon className="h-5 w-5" />
                 Star & Fork on GitHub
               </a>
               <a
                 href="#quickstart"
-                className="inline-flex items-center gap-2 rounded-3xl border border-slate-700 bg-slate-900 px-7 py-3.5 text-sm font-medium text-slate-300 transition-all hover:border-slate-500 hover:text-white active:scale-[0.985]"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-7 py-3.5 text-sm font-medium text-gray-300 transition-all hover:border-[#2DD4BF]/50 hover:text-[#2DD4BF]"
               >
                 Run your first scan
               </a>
             </div>
 
-            <p className="mt-8 text-xs text-slate-600">
+            <p className="mt-8 text-xs text-gray-600">
               Questions? Reach out on{' '}
-              <a href={`${GITHUB_URL}/discussions`} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:underline">
+              <a href={`${GITHUB_URL}/discussions`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:underline">
                 GitHub Discussions
               </a>
               {' '}or join our waitlist for early platform access.
@@ -471,10 +742,10 @@ export default function ProductsPage() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-slate-800 py-8">
-        <div className="mx-auto max-w-[1200px] px-6 text-center">
-          <p className="text-xs text-slate-500">© 2026 Trustabl. Building Trust as Code for agentic systems.</p>
-          <p className="mt-1.5 text-xs text-slate-600">
+      <footer className="border-t border-white/8 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <p className="text-xs text-gray-500">© 2026 Trustabl. Building Trust as Code for agentic systems.</p>
+          <p className="mt-1.5 text-xs text-gray-600">
             Analyzer (Open Source) · Rules · GitHub Action · Auto-Fix & Enrich coming soon
           </p>
         </div>

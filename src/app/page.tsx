@@ -684,6 +684,7 @@ export default function Home() {
   }, []);
 
   const navLinks = [
+    { label: 'Home', href: '/' },
     { label: 'Products', href: '/products' },
     { label: 'How it Works', href: '#how-it-works' },
     { label: 'NVIDIA', href: '#openshell' },
