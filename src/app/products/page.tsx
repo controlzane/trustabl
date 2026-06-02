@@ -201,9 +201,9 @@ export default function ProductsPage() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Products', href: '/products' },
-    { label: 'How it Works', href: '/#how-it-works' },
+    { label: 'Agents', href: '/agents' },
     { label: 'NVIDIA', href: '/#openshell' },
-    { label: 'Pricing', href: '/#pricing' },
+    { label: 'Blog', href: '/blog' },
   ];
 
   return (

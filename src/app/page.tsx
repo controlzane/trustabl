@@ -688,9 +688,9 @@ export default function Home() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Products', href: '/products' },
-    { label: 'How it Works', href: '#how-it-works' },
+    { label: 'Agents', href: '/agents' },
     { label: 'NVIDIA', href: '#openshell' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Blog', href: '/blog' },
   ];
 
   const trustLogoItems = [
@@ -1352,8 +1352,8 @@ export default function Home() {
                 </div>
 
                 <h1 className="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-                  Most agent tools work in demos.{' '}
-                  <span className="text-[#2DD4BF]">They break in production.</span>
+                  Make Your AI Tools{' '}
+                  <span className="text-[#2DD4BF]">Production-Ready in Minutes</span>
                 </h1>
 
                 <p className="text-xl font-light leading-relaxed text-gray-300 sm:whitespace-nowrap">
@@ -1371,7 +1371,8 @@ export default function Home() {
                     href={githubRepoUrl}
                     className="inline-flex items-center gap-2 bg-[#2DD4BF] text-[#0A0F1E] font-medium px-5 py-2 rounded-xl hover:bg-[#22B8A6] transition-all hover:scale-105 text-sm"
                   >
-                    Try It — Connect GitHub
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
+                    View on GitHub
                   </a>
                 </div>
               </div>
@@ -1419,37 +1420,37 @@ export default function Home() {
                 {
                   icon: <Zap className="h-5 w-5" />,
                   title: 'Higher Agent Success Rate',
-                  desc: <>Agents complete tasks more <span className="text-[#2DD4BF]">reliably</span> by using the <span className="text-[#2DD4BF]">right tools at the right time</span>.</>,
+                  desc: 'Agents complete tasks more reliably by using the right tools at the right time.',
                 },
                 {
                   icon: <DollarSign className="h-5 w-5" />,
                   title: 'Lower Token & API Costs',
-                  desc: <>Reduce <span className="text-[#2DD4BF]">wasted tokens</span> and <span className="text-[#2DD4BF]">expensive retries</span> through <span className="text-[#2DD4BF]">smarter tool definitions</span>.</>,
+                  desc: 'Reduce wasted tokens and expensive retries through smarter tool definitions.',
                 },
                 {
                   icon: <Activity className="h-5 w-5" />,
                   title: 'Faster Debugging & Observability',
-                  desc: <>Turn agent behavior from a <span className="text-[#2DD4BF]">black box</span> into something you can actually <span className="text-[#2DD4BF]">trace and debug</span>.</>,
+                  desc: 'Turn agent behavior from a black box into something you can actually trace and debug.',
                 },
                 {
                   icon: <Clock className="h-5 w-5" />,
                   title: 'Less Manual Hardening Work',
-                  desc: <>Automatically generate <span className="text-[#2DD4BF]">production-grade metadata</span> that would otherwise take <span className="text-[#2DD4BF]">hours or days</span> to create manually.</>,
+                  desc: 'Automatically generate production-grade metadata that would otherwise take hours or days to create manually.',
                 },
                 {
                   icon: <ShieldCheck className="h-5 w-5" />,
                   title: 'Stronger Security & Compliance',
-                  desc: <>Get <span className="text-[#2DD4BF]">least-privilege policies</span>, <span className="text-[#2DD4BF]">audit trails</span>, and <span className="text-[#2DD4BF]">supply chain attestations</span> by default.</>,
+                  desc: 'Get least-privilege policies, audit trails, and supply chain attestations by default.',
                 },
                 {
                   icon: <Settings2 className="h-5 w-5" />,
                   title: 'Future-Proof Integrations',
-                  desc: <>Works seamlessly with <span className="text-[#2DD4BF]">modern agent frameworks and runtimes</span> out of the box.</>,
+                  desc: 'Works seamlessly with modern agent frameworks and runtimes out of the box.',
                 },
                 {
                   icon: <TrendingUp className="h-5 w-5" />,
                   title: 'Continuous Improvement',
-                  desc: <>Tools get better over time using <span className="text-[#2DD4BF]">real runtime feedback</span>.</>,
+                  desc: 'Tools get better over time using real runtime feedback.',
                 },
               ].map((card) => (
                 <div key={card.title} className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30">
@@ -1477,69 +1478,6 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="bg-[#050506] py-28 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Four steps. Minutes, not days.</h2>
-            </div>
-
-            <div className="mt-10 grid gap-5 md:grid-cols-2">
-              <div className="space-y-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
-                {steps.map((step) => (
-                  <div key={step.n} className="rounded-3xl border border-white/8 bg-[#131317] p-5">
-                    <div className="mb-4">
-                      {renderStepVisual(step.n)}
-                    </div>
-                    <div className="mb-4 flex min-w-0 items-baseline gap-2">
-                      <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{step.n}</span>
-                      <span className="text-sm font-medium tracking-[0.06em] text-gray-500">—</span>
-                      <h3 className="min-w-0 truncate text-sm font-medium text-white">{step.title}</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-gray-400">{step.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        <section className="bg-[#050506] py-28 lg:py-32" id="outcomes">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="max-w-5xl">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">What you actually get</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                The output is smaller risk, clearer behavior, and less time lost to{' '}
-                <span className="whitespace-nowrap">broken tools.</span>
-              </h2>
-              <p className="mt-5 text-lg leading-relaxed text-gray-400 lg:whitespace-nowrap">
-                Trustabl is built to make AI tools production-ready without slowing your team down or burying them in manual review.
-              </p>
-            </div>
-
-            <div className="mt-12 grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch">
-              <div className="h-full">
-                <FlowPurification />
-              </div>
-
-              <div className="grid h-full gap-4 md:grid-cols-2 md:items-stretch">
-                {valueProps.map((card, index) => (
-                  <div key={card.title} className="flex h-full min-h-[176px] flex-col rounded-3xl border border-white/8 bg-white/[0.03] p-4 transition-colors hover:border-[#2DD4BF]/30">
-                    <div className="space-y-3">
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                        {renderValuePropIcon(index)}
-                      </div>
-                      <h3 className="text-base font-bold leading-snug">{card.title}</h3>
-                      <p className="text-sm leading-snug text-gray-400">{card.desc}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -1709,6 +1647,69 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="how-it-works" className="bg-[#050506] py-28 lg:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Four steps. Minutes, not days.</h2>
+            </div>
+
+            <div className="mt-10 grid gap-5 md:grid-cols-2">
+              <div className="space-y-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
+                {steps.map((step) => (
+                  <div key={step.n} className="rounded-3xl border border-white/8 bg-[#131317] p-5">
+                    <div className="mb-4">
+                      {renderStepVisual(step.n)}
+                    </div>
+                    <div className="mb-4 flex min-w-0 items-baseline gap-2">
+                      <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{step.n}</span>
+                      <span className="text-sm font-medium tracking-[0.06em] text-gray-500">—</span>
+                      <h3 className="min-w-0 truncate text-sm font-medium text-white">{step.title}</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-gray-400">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section className="bg-[#050506] py-28 lg:py-32" id="outcomes">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="max-w-5xl">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">What you actually get</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
+                The output is smaller risk, clearer behavior, and less time lost to{' '}
+                <span className="whitespace-nowrap">broken tools.</span>
+              </h2>
+              <p className="mt-5 text-lg leading-relaxed text-gray-400 lg:whitespace-nowrap">
+                Trustabl is built to make AI tools production-ready without slowing your team down or burying them in manual review.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch">
+              <div className="h-full">
+                <FlowPurification />
+              </div>
+
+              <div className="grid h-full gap-4 md:grid-cols-2 md:items-stretch">
+                {valueProps.map((card, index) => (
+                  <div key={card.title} className="flex h-full min-h-[176px] flex-col rounded-3xl border border-white/8 bg-white/[0.03] p-4 transition-colors hover:border-[#2DD4BF]/30">
+                    <div className="space-y-3">
+                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
+                        {renderValuePropIcon(index)}
+                      </div>
+                      <h3 className="text-base font-bold leading-snug">{card.title}</h3>
+                      <p className="text-sm leading-snug text-gray-400">{card.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="before-after" className="bg-[#050506] py-28 lg:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
@@ -1773,9 +1774,7 @@ export default function Home() {
             <div className="relative overflow-hidden rounded-[32px] border border-[#2DD4BF]/20 bg-white/[0.03] p-8 lg:p-12">
               <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
                 <div className="flex flex-col">
-                  <span className="inline-flex w-fit self-start rounded-full border border-[#76b900]/30 bg-[#76b900]/10 px-4 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-[#76b900]">
-                    Perfect Partner to OpenShell
-                  </span>
+                  <Image src="/inception-program.png" alt="NVIDIA Inception Program" width={160} height={60} className="w-auto h-12 object-contain self-start" />
                   <h2 className="mt-5 text-4xl font-semibold leading-tight lg:text-5xl">
                     Built for production.
                     <span className="block text-white">
@@ -2105,7 +2104,8 @@ export default function Home() {
                       href={githubRepoUrl}
                       className="inline-flex items-center gap-2 rounded-xl bg-[#2DD4BF] px-6 py-2.5 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
                     >
-                      Try It Free — Connect GitHub
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
+                      View on GitHub
                     </a>
                   </div>
                   <div className="flex flex-col items-center gap-2 lg:items-start">
