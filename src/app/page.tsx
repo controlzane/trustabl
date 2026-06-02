@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import {
   GitBranch, BarChart3, ShieldCheck, Download,
@@ -8,195 +9,12 @@ import {
   Play, Terminal,
   Zap, DollarSign, Activity, Settings2, TrendingUp,
   Monitor, Wrench, FileText, Cpu, Code2, Link2,
+  ChevronDown,
 } from 'lucide-react';
+import HeroParticles from '@/components/HeroParticles';
+import PreReleaseBanner from '@/components/PreReleaseBanner';
 
 const githubRepoUrl = 'https://github.com/controlzane/trustabl.git';
-
-function HeroParticles() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const context = ctx;
-
-    const dpr = window.devicePixelRatio || 1;
-
-    function getCenter() {
-      return { x: canvas!.offsetWidth / 2, y: canvas!.offsetHeight / 2 };
-    }
-
-    const MAX_SPEED = 0.48;
-    const TRAIL = 6;
-    const N = 145;
-    const DRAG = 0.996;
-    const SPAWN_MARGIN = 48;
-
-    type Particle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      opacity: number;
-      trail: [number, number][];
-      teal: boolean;
-      age: number;
-      swirl: number;
-      swirlSpeed: number;
-      wobble: number;
-    };
-
-    function createParticle(x: number, y: number): Particle {
-      return {
-        x,
-        y,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        size: 0.45 + Math.random() * 0.95,
-        opacity: 0.1 + Math.random() * 0.22,
-        trail: [],
-        teal: Math.random() < 0.12,
-        age: 0,
-        swirl: Math.random() * Math.PI * 2,
-        swirlSpeed: 0.0018 + Math.random() * 0.0018,
-        wobble: 0.0008 + Math.random() * 0.0012,
-      };
-    }
-
-    function spawnAnywhere(): Particle {
-      const w = canvas!.offsetWidth;
-      const h = canvas!.offsetHeight;
-      return createParticle(Math.random() * w, Math.random() * h);
-    }
-
-    function spawnFromEdge(): Particle {
-      const w = canvas!.offsetWidth;
-      const h = canvas!.offsetHeight;
-      const side = Math.floor(Math.random() * 4);
-      let x = 0;
-      let y = 0;
-
-      if (side === 0) {
-        x = -SPAWN_MARGIN;
-        y = Math.random() * h;
-      } else if (side === 1) {
-        x = w + SPAWN_MARGIN;
-        y = Math.random() * h;
-      } else if (side === 2) {
-        x = Math.random() * w;
-        y = -SPAWN_MARGIN;
-      } else {
-        x = Math.random() * w;
-        y = h + SPAWN_MARGIN;
-      }
-
-      return createParticle(x, y);
-    }
-
-    let particles: Particle[] = [];
-
-    function resetParticles() {
-      particles = Array.from({ length: N }, spawnAnywhere);
-      context.clearRect(0, 0, canvas!.offsetWidth, canvas!.offsetHeight);
-    }
-
-    function resize() {
-      const w = canvas!.offsetWidth;
-      const h = canvas!.offsetHeight;
-      canvas!.width = w * dpr;
-      canvas!.height = h * dpr;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      resetParticles();
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-
-    let raf = 0;
-    function draw() {
-      const w = canvas!.offsetWidth;
-      const h = canvas!.offsetHeight;
-      context.clearRect(0, 0, w, h);
-      const center = getCenter();
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        const dx = center.x - p.x;
-        const dy = center.y - p.y;
-        const dist = Math.hypot(dx, dy);
-        const safeDist = Math.max(dist, 1);
-        p.age += 1;
-
-        if (p.x < -SPAWN_MARGIN || p.x > w + SPAWN_MARGIN || p.y < -SPAWN_MARGIN || p.y > h + SPAWN_MARGIN) {
-          particles[i] = spawnFromEdge();
-          continue;
-        }
-
-        p.swirl += p.swirlSpeed;
-        const nx = dx / safeDist;
-        const ny = dy / safeDist;
-        const tangentialX = -ny;
-        const tangentialY = nx;
-        const drift = Math.sin(p.swirl) * 0.02;
-        p.vx += tangentialX * drift + Math.cos(p.swirl * 0.7) * p.wobble;
-        p.vy += tangentialY * drift + Math.sin(p.swirl * 0.7) * p.wobble;
-        p.vx += Math.sin(p.age * 0.012 + p.swirl) * 0.006;
-        p.vy += Math.cos(p.age * 0.011 + p.swirl) * 0.006;
-
-        p.vx *= DRAG;
-        p.vy *= DRAG;
-
-        const speed = Math.hypot(p.vx, p.vy);
-        if (speed > MAX_SPEED) {
-          p.vx = (p.vx / speed) * MAX_SPEED;
-          p.vy = (p.vy / speed) * MAX_SPEED;
-        }
-
-        p.trail.push([p.x, p.y]);
-        if (p.trail.length > TRAIL) p.trail.shift();
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        const centerFade = 0.85 - Math.min(0.35, dist / Math.max(w, h) * 0.25);
-        const alpha = p.opacity * centerFade;
-
-        if (speed > 0.12 && p.trail.length > 2) {
-          for (let t = 1; t < p.trail.length; t++) {
-            const tf = t / p.trail.length;
-            context.beginPath();
-            context.moveTo(p.trail[t - 1][0], p.trail[t - 1][1]);
-            context.lineTo(p.trail[t][0], p.trail[t][1]);
-            context.strokeStyle = p.teal
-              ? `rgba(45,212,191,${alpha * tf * 0.18})`
-              : `rgba(220,232,255,${alpha * tf * 0.14})`;
-            context.lineWidth = p.size * tf * 0.35;
-            context.lineCap = 'round';
-            context.stroke();
-          }
-        }
-
-        context.beginPath();
-        context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        context.fillStyle = p.teal ? `rgba(45,212,191,${alpha})` : `rgba(220,232,255,${alpha})`;
-        context.fill();
-      }
-
-      raf = requestAnimationFrame(draw);
-    }
-
-    draw();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full pointer-events-none" />;
-}
 
 type CliPhase = {
   label: string;
@@ -1282,15 +1100,15 @@ export default function Home() {
     <div className="min-h-screen overflow-x-hidden bg-[#050506] text-white">
       <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/5 bg-[#050506]/85 backdrop-blur-md">
         <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6">
-          <a href="#" className="justify-self-start">
+          <Link href="/" className="justify-self-start">
             <Image src="/trustabl-logo.svg" alt="Trustabl" width={1236} height={295} priority className="h-7 w-auto" />
-          </a>
+          </Link>
 
           <div className="hidden items-center justify-center gap-8 text-sm font-medium text-gray-400 md:flex">
             {navLinks.map((link) => (
-              <a key={link.label} href={link.href} className="transition-colors duration-200 hover:text-white">
+              <Link key={link.label} href={link.href} className={`transition-colors duration-200 hover:text-white ${link.href === '/' ? 'text-white' : ''}`}>
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -1315,9 +1133,9 @@ export default function Home() {
           <div className="border-t border-white/5 bg-[#050506]/98 px-4 py-5 backdrop-blur-md md:hidden">
             <div className="space-y-4">
               {navLinks.map((link) => (
-                <a key={link.label} href={link.href} className="block text-sm text-gray-300 hover:text-white">
+                <Link key={link.label} href={link.href} className={`block text-sm font-medium transition-colors hover:text-white ${link.href === '/' ? 'text-white' : 'text-gray-400'}`}>
                   {link.label}
-                </a>
+                </Link>
               ))}
               <a href={githubRepoUrl} className="block rounded-xl bg-[#2DD4BF] px-5 py-2.5 text-center text-sm font-medium text-[#08121F]">
                 Try It
@@ -1327,14 +1145,8 @@ export default function Home() {
         )}
       </nav>
 
-      <main>
-        {/* ── ANNOUNCEMENT ── */}
-        <div className="mt-16 border-b border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.06] px-4 py-2.5 text-center">
-          <p className="text-xs font-medium text-[#2DD4BF]">
-            <span className="mr-2 inline-flex items-center rounded-md border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Pre-release</span>
-            Some features are still in development and will be available soon.
-          </p>
-        </div>
+      <main className="pt-16">
+        <PreReleaseBanner />
 
         <section className="relative min-h-screen flex items-center overflow-hidden bg-[#050506]">
           <div className="absolute inset-0 pointer-events-none">
@@ -2069,16 +1881,16 @@ export default function Home() {
                 <div key={i} className="py-5">
                   <button
                     type="button"
-                    className="flex w-full items-start justify-between gap-4 text-left"
+                    className="flex w-full items-center justify-between gap-4 text-left"
                     onClick={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <span className="font-medium text-white">{item.q}</span>
-                    <span className="mt-0.5 flex-shrink-0 text-[#2DD4BF]">
-                      {faqOpen === i ? '−' : '+'}
-                    </span>
+                    <span className="text-lg text-white">{item.q}</span>
+                    <ChevronDown
+                      className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${faqOpen === i ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   {faqOpen === i && (
-                    <p className="mt-3 text-sm leading-relaxed text-gray-400">{item.a}</p>
+                    <div className="pb-5 text-sm leading-relaxed text-gray-400">{item.a}</div>
                   )}
                 </div>
               ))}
@@ -2187,14 +1999,12 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-[#050506] py-12">
-        <div className="mx-auto max-w-7xl px-4 text-gray-500 sm:px-6">
-          <div className="mt-10 flex flex-col items-center gap-4 border-t border-white/5 pt-8 text-center md:flex-row md:justify-between md:text-left">
-            <a href="#" className="inline-flex items-center">
-              <Image src="/trustabl-logo.svg" alt="Trustabl" width={1236} height={295} className="h-6 w-auto opacity-80" />
-            </a>
-            <p className="text-xs text-gray-700">Trustabl © 2026</p>
-          </div>
+      <footer className="border-t border-white/8 py-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="inline-flex items-center">
+            <Image src="/trustabl-logo.svg" alt="Trustabl" width={1236} height={295} className="h-6 w-auto opacity-60" />
+          </Link>
+          <p className="text-xs text-gray-500">© 2026 Trustabl</p>
         </div>
       </footer>
     </div>

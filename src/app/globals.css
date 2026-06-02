@@ -75,11 +75,11 @@
 
 html {
   scroll-behavior: smooth;
-  background: #0C0C0E;
+  background: #050506;
 }
 
 body {
-  background: #0C0C0E;
+  background: #050506;
   color: #ffffff;
   font-family: var(--font-poppins), sans-serif;
 }
