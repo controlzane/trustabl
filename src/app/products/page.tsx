@@ -40,9 +40,8 @@ export default function ProductsPage() {
 
   const navLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Products', href: '/products' },
-    { label: 'Agents', href: '/agents' },
-    { label: 'NVIDIA', href: '/#openshell' },
+    { label: 'Product', href: '/products' },
+    { label: 'Docs', href: '/docs' },
     { label: 'Blog', href: '/blog' },
   ];
 
@@ -313,7 +312,7 @@ export default function ProductsPage() {
                 { n: '01', title: 'Scan your repo', desc: 'Point the analyzer at any agent codebase. It reads your tool definitions, schemas, and implementation files.' },
                 { n: '02', title: 'Analyze findings', desc: 'Static rules run across every tool, checking for validation gaps, missing retry logic, observability holes, and guardrail issues.' },
                 { n: '03', title: 'Generate report', desc: 'Get a prioritized report with a Production Readiness Score, severity-ranked findings, and SARIF/JSON/human-readable output.' },
-                { n: '04', title: 'Improve & harden', desc: 'Use findings to guide manual fixes or wait for Auto-Fix (coming June 2026) to apply remediations automatically.' },
+                { n: '04', title: 'Improve & harden', desc: 'Use findings to guide manual fixes today. Free automated remediation via VS Code, Cursor, and Skill.md is coming soon.' },
               ].map((step) => (
                 <div key={step.n} className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30">
                   <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{step.n}</span>
@@ -453,7 +452,7 @@ export default function ProductsPage() {
                   title: 'Auto-Fix + OpenShell Features',
                   badge: 'COMING SOON',
                   badgeCls: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
-                  desc: 'Automated remediation suggestions and full OpenShell risk surface analysis & hardening. First paid / platform capabilities.',
+                  desc: 'Automated remediation via VS Code/Cursor extension and Skill.md — auto-fix safe issues, review higher-risk changes before committing. Full OpenShell risk surface analysis & hardening.',
                   active: false,
                 },
                 {

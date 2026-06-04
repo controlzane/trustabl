@@ -505,9 +505,8 @@ export default function Home() {
 
   const navLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Products', href: '/products' },
-    { label: 'Agents', href: '/agents' },
-    { label: 'NVIDIA', href: '#openshell' },
+    { label: 'Product', href: '/products' },
+    { label: 'Docs', href: '/docs' },
     { label: 'Blog', href: '/blog' },
   ];
 
@@ -698,71 +697,18 @@ export default function Home() {
   const roadmapItems = [
     {
       id: 'now',
-      content: 'Now: harden individual tools for production use.',
+      content: 'Now: scan agents, tools, and skills for production issues with the open-source Trustabl Agent Analyzer.',
     },
     {
       id: 'next',
-      content: (
-        <>
-          Next: add support for skills, including prompt hardening and
-          <br />
-          logic improvements.
-        </>
-      ),
+      content: 'Next: free remediation via VS Code and Cursor — auto-fix safe issues and review higher-risk changes before committing.',
     },
     {
       id: 'later',
-      content: 'Later: expand into full agent system support.',
+      content: 'Coming Soon: GitHub Actions integration and Skill.md-based remediation for any agent environment.',
     },
   ];
 
-  const pricingTiers = [
-    {
-      name: 'Open Source',
-      price: 'Free',
-      period: '',
-      best: 'Trust / Reliability Scanner',
-      features: [
-        'Scan for agent/tool issues',
-        'Instant quality score',
-        'Identifies issues and omissions',
-        'Suggests remediations',
-      ],
-      cta: 'Start Free',
-      highlight: false,
-    },
-    {
-      name: 'Try It',
-      price: 'Free',
-      period: '',
-      best: 'No Credit Card / No Account',
-      features: [
-        '1 repo',
-        'GitHub connect',
-        'Full auto-enrichment',
-        '91–93 quality',
-        'Rate limited',
-      ],
-      cta: 'Start Free',
-      highlight: true,
-    },
-    {
-      name: 'Builder',
-      price: '$19.98',
-      period: '/ user / mo',
-      best: 'Serious individual builders\nDaily power users',
-      features: [
-        'Unlimited repos',
-        'Priority Speed',
-        'Advance Scoring',
-        'Guided Enrichment',
-        'Export Bundles',
-        'Priority Support',
-      ],
-      cta: 'Choose Builder',
-      highlight: false,
-    },
-  ];
 
   const atmComponents = [
     {
@@ -879,7 +825,7 @@ export default function Home() {
   const faqItems = [
     {
       q: 'What is Trustabl?',
-      a: 'Trustabl automatically hardens AI agent tools for production by generating rich, reliable metadata — including schemas, validation rules, retry policies, observability, security policies, and supply-chain attestations. It turns fragile, demo-grade tools into production-ready ones in minutes.',
+      a: 'Trustabl scans AI agents, tools, and skills for production-readiness issues — flagging reliability, safety, and configuration gaps with clear fix suggestions. Free remediation via VS Code, Cursor, and Skill.md is coming soon. Think of it as a specialized linter for agentic systems.',
     },
     {
       q: 'Who is Trustabl for?',
@@ -919,11 +865,23 @@ export default function Home() {
     },
     {
       q: 'Can I try Trustabl for free?',
-      a: 'Yes. You can connect your GitHub repo and harden tools for free with no credit card required. Many teams start by hardening their most critical tools to see the immediate impact.',
+      a: 'Yes. The Trustabl Agent Analyzer is fully open source — scan any agent codebase for free, no account required. Free remediation via VS Code, Cursor, and Skill.md is coming soon. No credit card, no gates.',
     },
     {
       q: "What's coming next for Trustabl?",
-      a: "We're actively building company policy enforcement, deeper OpenShell integration, expanded CI/CD plugins, and advanced analytics on tool usage patterns across your agent fleet.",
+      a: "We're focused on the free remediation experience: GitHub Actions integration, expanded Skill.md support, and skills file scanning. Team governance and compliance features are planned for later.",
+    },
+    {
+      q: 'Is Trustabl like a linting tool specialized for AI agents?',
+      a: 'Yes. Trustabl is essentially a specialized linter for AI agents. While traditional linters (like ESLint or Ruff) focus on code style, syntax, and general bugs, Trustabl analyzes your AI agents, tools, prompts, and SDK configurations for reliability, safety, and production readiness — flagging patterns that expose you to prompt injection, missing timeouts, tool misconfigurations, and guardrail gaps that standard linters miss. Think of it as "ESLint for AI agents" — it runs in CI/CD, gives clear explanations and fix suggestions, and helps you ship safer, more robust agentic systems.',
+    },
+    {
+      q: 'How does the free remediation process work?',
+      a: 'After scanning, Trustabl generates fix suggestions for every finding. Safe, low-risk fixes will be applied automatically. Higher-risk changes will be surfaced for your review before anything is committed. Remediation will be available as a VS Code/Cursor extension and as a Skill.md for other agent environments. Coming soon.',
+    },
+    {
+      q: 'Do I have to accept every suggested fix?',
+      a: 'No. You have full control. Trustabl auto-applies safe fixes (like adding missing timeouts or standardizing retry logic) and surfaces higher-risk changes for your explicit review and approval. You decide what gets committed.',
     },
   ];
 
@@ -1159,7 +1117,7 @@ export default function Home() {
                 <div className="inline-flex items-center gap-2.5 bg-[#2DD4BF]/10 border border-[#2DD4BF]/25 rounded-full px-4 py-1.5">
                   <span className="w-2 h-2 bg-[#2DD4BF] rounded-full animate-pulse" />
                   <span className="text-[#2DD4BF] text-xs font-bold uppercase tracking-wider">
-                    AI Tool Hardening - Now in Beta
+                    Agent Hardening — Free Remediation Coming Soon
                   </span>
                 </div>
 
@@ -1178,7 +1136,22 @@ export default function Home() {
                   .
                 </p>
 
-                <div className="flex gap-3 pt-2">
+                <p className="text-sm leading-relaxed text-gray-400">
+                  Scan your agents, tools, and skills today — free and open source. Free remediation via VS Code, Cursor, and Skill.md is coming soon, with full control over what you accept.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {(['Scan', 'Auto-fix safe issues', 'Review changes', 'Accept & Commit'] as const).map((step, i) => (
+                    <span key={step} className="flex items-center gap-2">
+                      <span className={`rounded-full border px-3 py-1 text-xs font-medium ${i === 3 ? 'border-[#2DD4BF]/30 bg-[#2DD4BF]/10 text-[#2DD4BF]' : 'border-white/10 bg-white/[0.03] text-gray-300'}`}>
+                        {step}
+                      </span>
+                      {i < 3 && <span className="text-gray-600 text-xs">→</span>}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
                   <a
                     href={githubRepoUrl}
                     className="inline-flex items-center gap-2 bg-[#2DD4BF] text-[#0A0F1E] font-medium px-5 py-2 rounded-xl hover:bg-[#22B8A6] transition-all hover:scale-105 text-sm"
@@ -1186,6 +1159,10 @@ export default function Home() {
                     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
                     View on GitHub
                   </a>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#2DD4BF]/25 bg-[#2DD4BF]/10 px-3 py-1.5 text-xs font-medium text-[#2DD4BF]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />
+                    Free Remediation — Coming Soon
+                  </span>
                 </div>
               </div>
 
@@ -1613,12 +1590,12 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
               <div>
-                <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Agents &amp; skills coming soon</p>
+                <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Roadmap</p>
                 <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                  We start with tools. Skills and agents <span className="whitespace-nowrap">come next.</span>
+                  Scan today. Free remediation <span className="whitespace-nowrap">coming next.</span>
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-gray-400">
-                  Trustabl is rolling out in layers so hardening stays reliable before we expand into broader agent workflows.
+                  Free and open source now, with seamless IDE remediation and GitHub Actions coming next.
                 </p>
               </div>
               <div className="max-w-[560px] rounded-[28px] border border-white/8 bg-white/[0.03] p-6 text-sm text-gray-300 lg:justify-self-end">
@@ -1632,68 +1609,16 @@ export default function Home() {
                   ))}
                 </ul>
                 <a
-                  href="#"
+                  href={githubRepoUrl}
                   className="mt-5 inline-flex items-center gap-2 border border-[#2DD4BF]/35 text-[#2DD4BF] font-medium px-5 py-2 rounded-xl hover:bg-[#2DD4BF]/10 transition-all text-sm"
                 >
-                  Join the waitlist for early access
+                  Get started free →
                 </a>
               </div>
             </div>
           </div>
         </section>
 
-
-        <section id="pricing" className="bg-[#050506] py-28 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Pricing</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Start free. Upgrade when you are ready.</h2>
-            </div>
-
-            <div className="mt-14 mx-auto grid max-w-4xl gap-5 md:grid-cols-3">
-              {pricingTiers.map((tier) => (
-                <div
-                  key={tier.name}
-                  className={`relative flex h-full flex-col rounded-3xl p-7 ${
-                    tier.highlight
-                      ? 'border-2 border-[#2DD4BF] bg-[#0D1614]'
-                      : 'border border-white/8 bg-[#0D0D10]'
-                  }`}
-                >
-                  <div className="mb-2">
-                    <h3 className={`text-base font-bold ${tier.highlight ? 'text-[#2DD4BF]' : 'text-white'}`}>{tier.name}</h3>
-                    <p className="mt-1 whitespace-pre-line text-sm text-gray-400">{tier.best}</p>
-                  </div>
-
-                  <div className="my-6">
-                    <span className="text-4xl font-bold text-white">{tier.price}</span>
-                    {tier.period && <span className="ml-1.5 text-sm text-gray-500">{tier.period}</span>}
-                  </div>
-
-                  <ul className="mb-8 flex-1 space-y-2.5 text-sm text-gray-300">
-                    {tier.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <span className="text-[#2DD4BF]">✓</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={githubRepoUrl}
-                    className={`inline-flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all ${
-                      tier.highlight
-                        ? 'bg-[#2DD4BF] text-[#08121F] hover:bg-[#22B8A6]'
-                        : 'bg-white/8 text-white hover:bg-white/12'
-                    }`}
-                  >
-                    {tier.cta}
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ATM Diagram Section */}
         <section id="atm" className="bg-[#050506] py-28 lg:py-32">

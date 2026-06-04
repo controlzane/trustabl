@@ -46,9 +46,8 @@ const XCircle = () => (
 
 const navLinks = [
   { label: 'Home', href: '/' },
-  { label: 'Products', href: '/products' },
-  { label: 'Agents', href: '/agents' },
-  { label: 'NVIDIA', href: '/#openshell' },
+  { label: 'Product', href: '/products' },
+  { label: 'Docs', href: '/docs' },
   { label: 'Blog', href: '/blog' },
 ];
 
