@@ -258,7 +258,7 @@ export default function AgentsPage() {
         )}
       </nav>
 
-      <main className="pt-16">
+      <main className="page-transition pt-16">
         <PreReleaseBanner />
 
       {/* HERO */}
@@ -308,7 +308,7 @@ export default function AgentsPage() {
       </section>
 
       {/* WHY AGENTS NEED HARDENED TOOLS */}
-      <section className="border-b border-white/8 bg-[#090a0d] py-24">
+      <section className="border-b border-white/8 bg-[#090a0d] py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             The Problem We Solve
@@ -354,7 +354,7 @@ export default function AgentsPage() {
       </section>
 
       {/* HOW WE PREVENT AGENTIC FAILURE */}
-      <section className="border-b border-white/8 bg-black py-24">
+      <section className="border-b border-white/8 bg-black py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             How We Prevent Agentic Failure
@@ -421,7 +421,7 @@ export default function AgentsPage() {
       </section>
 
       {/* NVIDIA OPENSHELL */}
-      <section id="openshell" className="border-b border-white/8 bg-[#090a0d] py-24">
+      <section id="openshell" className="border-b border-white/8 bg-[#090a0d] py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div>
@@ -478,7 +478,7 @@ export default function AgentsPage() {
       </section>
 
       {/* KARPATHY ALIGNMENT */}
-      <section className="border-b border-white/8 bg-black py-24">
+      <section className="border-b border-white/8 bg-black py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             Karpathy Alignment
@@ -531,7 +531,7 @@ export default function AgentsPage() {
       </section>
 
       {/* ATM SCHEMA */}
-      <section id="schema" className="border-b border-white/8 bg-[#090a0d] py-24">
+      <section id="schema" className="border-b border-white/8 bg-[#090a0d] py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             ATM Schema &amp; Machine-Readable Details
@@ -571,7 +571,7 @@ export default function AgentsPage() {
       </section>
 
       {/* INTEGRATION OPTIONS */}
-      <section className="border-b border-white/8 bg-black py-24">
+      <section className="border-b border-white/8 bg-black py-24 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             Integration Options
@@ -616,7 +616,7 @@ export default function AgentsPage() {
       </section>
 
       {/* FAQ */}
-      <section className="border-b border-white/8 bg-[#090a0d] py-24">
+      <section className="border-b border-white/8 bg-[#090a0d] py-24 reveal">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <p className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">
             Agent-Specific FAQ
@@ -649,7 +649,7 @@ export default function AgentsPage() {
       </section>
 
       {/* FOOTER CTA */}
-      <section className="border-b border-white/8 bg-black py-16">
+      <section className="border-b border-white/8 bg-black py-16 reveal">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-10">
             <div className="flex flex-col gap-6">

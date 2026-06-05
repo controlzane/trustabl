@@ -14,7 +14,7 @@ import {
 import HeroParticles from '@/components/HeroParticles';
 import PreReleaseBanner from '@/components/PreReleaseBanner';
 
-const githubRepoUrl = 'https://github.com/controlzane/trustabl.git';
+const githubRepoUrl = 'https://github.com/trustabl';
 
 type CliPhase = {
   label: string;
@@ -489,6 +489,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scanTick, setScanTick] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [starCount, setStarCount] = useState<number | null>(null);
   const [atmModal, setAtmModal] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -501,6 +502,13 @@ export default function Home() {
   useEffect(() => {
     const iv = setInterval(() => setScanTick(t => t + 1), 7000);
     return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/trustabl/trustabl')
+      .then(r => r.json())
+      .then(d => { if (typeof d.stargazers_count === 'number') setStarCount(d.stargazers_count); })
+      .catch(() => {});
   }, []);
 
   const navLinks = [
@@ -607,6 +615,52 @@ export default function Home() {
         />
       ),
     },
+    {
+      name: 'Microsoft',
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.4 2H2v9.4h9.4V2zm10.6 0h-9.4v9.4H22V2zM11.4 12.6H2V22h9.4v-9.4zm10.6 0h-9.4V22H22v-9.4z"/>
+        </svg>
+      ),
+    },
+    {
+      name: 'VS Code',
+      icon: (
+        <span
+          aria-hidden="true"
+          className="block h-5 w-5 bg-current"
+          style={{
+            WebkitMaskImage: 'url(/visual-studio-code-svgrepo-com.svg)',
+            maskImage: 'url(/visual-studio-code-svgrepo-com.svg)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+          }}
+        />
+      ),
+    },
+    {
+      name: 'Cursor',
+      icon: (
+        <span
+          aria-hidden="true"
+          className="block h-5 w-5 bg-current"
+          style={{
+            WebkitMaskImage: 'url(https://unpkg.com/@lobehub/icons-static-svg@latest/icons/cursor.svg)',
+            maskImage: 'url(https://unpkg.com/@lobehub/icons-static-svg@latest/icons/cursor.svg)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+          }}
+        />
+      ),
+    },
   ];
 
   const valueProps = [
@@ -697,15 +751,36 @@ export default function Home() {
   const roadmapItems = [
     {
       id: 'now',
-      content: 'Now: scan agents, tools, and skills for production issues with the open-source Trustabl Agent Analyzer.',
+      date: 'Now',
+      dateCls: 'text-[#2DD4BF]',
+      dotCls: 'bg-[#2DD4BF] shadow-[0_0_12px_rgba(45,212,191,0.5)]',
+      title: 'Trustabl Agent Analyzer',
+      badge: 'OPEN SOURCE',
+      badgeCls: 'bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/25',
+      desc: 'Static analysis, rule-based detection, scoring, SARIF/JSON/human output, GitHub Action ready. Available today on GitHub.',
+      active: true,
     },
     {
       id: 'next',
-      content: 'Next: free remediation via VS Code and Cursor — auto-fix safe issues and review higher-risk changes before committing.',
+      date: 'Jun 2026',
+      dateCls: 'text-amber-400',
+      dotCls: 'bg-amber-400/40 border border-amber-400/60',
+      title: 'Auto-Fix + OpenShell Features',
+      badge: 'COMING SOON',
+      badgeCls: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
+      desc: 'Automated remediation via VS Code/Cursor extension and Skill.md — auto-fix safe issues, review higher-risk changes before committing. Full OpenShell risk surface analysis & hardening.',
+      active: false,
     },
     {
       id: 'later',
-      content: 'Coming Soon: GitHub Actions integration and Skill.md-based remediation for any agent environment.',
+      date: 'Q3 2026',
+      dateCls: 'text-gray-500',
+      dotCls: 'bg-white/10 border border-white/15',
+      title: 'Auto-Enrich',
+      badge: null,
+      badgeCls: '',
+      desc: 'LLM-powered enrichment of findings with deeper context, examples, and custom policy alignment.',
+      active: false,
     },
   ];
 
@@ -1063,14 +1138,37 @@ export default function Home() {
           </Link>
 
           <div className="hidden items-center justify-center gap-8 text-sm font-medium text-gray-400 md:flex">
-            {navLinks.map((link) => (
-              <Link key={link.label} href={link.href} className={`transition-colors duration-200 hover:text-white ${link.href === '/' ? 'text-white' : ''}`}>
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.href.startsWith('http') ? (
+                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="transition-colors duration-200 hover:text-white">
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.label} href={link.href} className={`transition-colors duration-200 hover:text-white ${link.href === '/' ? 'text-white' : ''}`}>
+                  {link.label}
+                </Link>
+              )
+            )}
           </div>
 
           <div className="hidden items-center justify-end gap-4 md:flex">
+            <a
+              href={githubRepoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium text-gray-300 transition-all hover:bg-white/[0.07] hover:text-white"
+            >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              </svg>
+              <span>GitHub</span>
+              {starCount !== null && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-amber-400/15 px-2 py-0.5 text-[12px] font-semibold text-amber-400">
+                  <svg className="h-3 w-3 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  {starCount >= 1000 ? `${(starCount / 1000).toFixed(1)}k` : starCount}
+                </span>
+              )}
+            </a>
               <a
               href={githubRepoUrl}
               className="rounded-xl bg-[#2DD4BF] px-5 py-2 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
@@ -1103,7 +1201,7 @@ export default function Home() {
         )}
       </nav>
 
-      <main className="pt-16">
+      <main className="page-transition pt-16">
         <PreReleaseBanner />
 
         <section className="relative min-h-screen flex items-center overflow-hidden bg-[#050506]">
@@ -1126,17 +1224,8 @@ export default function Home() {
                   <span className="text-[#2DD4BF]">Production-Ready in Minutes</span>
                 </h1>
 
-                <p className="text-xl font-light leading-relaxed text-gray-300 sm:whitespace-nowrap">
-                  Average Production Readiness Score goes from{' '}
-                  <span className="whitespace-nowrap">
-                    <span className="font-semibold tracking-[0.02em] text-red-400">38%</span>
-                    <span className="mx-2 text-gray-500">→</span>
-                    <span className="font-semibold tracking-[0.02em] text-[#2DD4BF]">91%</span>
-                  </span>
-                  .
-                </p>
 
-                <p className="text-sm leading-relaxed text-gray-400">
+<p className="text-sm leading-relaxed text-gray-400">
                   Scan your agents, tools, and skills today — free and open source. Free remediation via VS Code, Cursor, and Skill.md is coming soon, with full control over what you accept.
                 </p>
 
@@ -1193,7 +1282,7 @@ export default function Home() {
         </section>
 
         {/* ── BENEFITS ── */}
-        <section className="bg-[#050506] py-28 lg:py-32 border-t border-white/5">
+        <section className="bg-[#050506] py-28 lg:py-32 border-t border-white/5 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Benefits</p>
@@ -1268,7 +1357,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="problem" className="bg-[#050506] py-28 lg:py-32">
+        <section id="problem" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="max-w-3xl">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">The problem</p>
@@ -1432,7 +1521,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="how-it-works" className="bg-[#050506] py-28 lg:py-32">
+        <section id="how-it-works" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
@@ -1460,7 +1549,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-[#050506] py-28 lg:py-32" id="outcomes">
+        <section className="bg-[#050506] py-28 lg:py-32 reveal" id="outcomes">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="max-w-5xl">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">What you actually get</p>
@@ -1495,7 +1584,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="before-after" className="bg-[#050506] py-28 lg:py-32">
+        <section id="before-after" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Before vs after</p>
@@ -1542,7 +1631,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="why-trustabl" className="bg-[#050506] py-28 lg:py-32">
+        <section id="why-trustabl" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Why Trustabl?</p>
@@ -1554,7 +1643,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="openshell" className="bg-[#050506] py-28 lg:py-32">
+        <section id="openshell" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="relative overflow-hidden rounded-[32px] border border-[#2DD4BF]/20 bg-white/[0.03] p-8 lg:p-12">
               <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
@@ -1582,42 +1671,52 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="roadmap" className="bg-[#050506] py-28 lg:py-32">
+        <section id="roadmap" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
-              <div>
-                <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Roadmap</p>
-                <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                  Scan today. Free remediation <span className="whitespace-nowrap">coming next.</span>
-                </h2>
-                <p className="mt-5 max-w-2xl text-lg leading-relaxed text-gray-400">
-                  Free and open source now, with seamless IDE remediation and GitHub Actions coming next.
-                </p>
-              </div>
-              <div className="max-w-[560px] rounded-[28px] border border-white/8 bg-white/[0.03] p-6 text-sm text-gray-300 lg:justify-self-end">
-                <p className="font-medium text-white">Roadmap</p>
-                <ul className="mt-4 space-y-3">
-                  {roadmapItems.map((item) => (
-                    <li key={item.id} className="flex items-start gap-3">
-                      <span className="mt-1.5 h-2 w-2 rounded-full bg-[#2DD4BF]" />
-                      <span>{item.content}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={githubRepoUrl}
-                  className="mt-5 inline-flex items-center gap-2 border border-[#2DD4BF]/35 text-[#2DD4BF] font-medium px-5 py-2 rounded-xl hover:bg-[#2DD4BF]/10 transition-all text-sm"
-                >
-                  Get started free →
-                </a>
-              </div>
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Roadmap</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
+                Starting with open source.<br />Growing into a full platform.
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-gray-400">
+                Trustabl Agent Analyzer is the trustworthy foundation. We&apos;re shipping production hardening capabilities throughout 2026.
+              </p>
+            </div>
+            <div className="mx-auto max-w-3xl">
+              {roadmapItems.map((phase, i, arr) => (
+                <div key={phase.id} className="flex gap-6">
+                  <div className="relative hidden w-32 flex-shrink-0 flex-col items-end md:flex">
+                    <div className="flex items-center gap-2 pt-6">
+                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
+                      <div className={`h-3 w-3 flex-shrink-0 rounded-full ${phase.dotCls}`} />
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className="mr-[5px] w-px flex-1 bg-white/8" />
+                    )}
+                  </div>
+                  <div className={`mb-5 flex-1 rounded-3xl border p-6 transition-colors ${phase.active ? 'border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.04]' : 'border-white/8 bg-white/[0.03]'}`}>
+                    <div className="mb-1 flex flex-wrap items-center gap-2 md:hidden">
+                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-semibold text-white">{phase.title}</h3>
+                      {phase.badge && (
+                        <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${phase.badgeCls}`}>
+                          {phase.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-400">{phase.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
 
         {/* ATM Diagram Section */}
-        <section id="atm" className="bg-[#050506] py-28 lg:py-32">
+        <section id="atm" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Agentic Tool Metadata</p>
@@ -1791,8 +1890,8 @@ export default function Home() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="bg-[#050506] py-28 lg:py-32">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <section id="faq" className="bg-[#050506] py-28 lg:py-32 reveal">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6">
             <div className="text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">FAQ</p>
               <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Common questions</h2>
@@ -1819,7 +1918,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="share" className="bg-[#050506] py-28 lg:py-32">
+        <section id="share" className="bg-[#050506] py-28 lg:py-32 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="rounded-[32px] border border-white/8 bg-white/[0.03] p-8 lg:p-12">
               <div className="grid lg:grid-cols-[1fr_auto] lg:items-center gap-10">
@@ -1881,7 +1980,7 @@ export default function Home() {
       </main>
 
       {/* Newsletter */}
-      <section className="bg-[#050506] py-20">
+      <section className="bg-[#050506] py-20 reveal">
         <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#2DD4BF]">Stay Updated</p>
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Product updates, delivered.</h2>

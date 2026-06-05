@@ -105,7 +105,7 @@ export default function ProductsPage() {
         )}
       </nav>
 
-      <main className="pt-16">
+      <main className="page-transition pt-16">
         <PreReleaseBanner />
 
         {/* ── HERO ── */}
@@ -124,7 +124,7 @@ export default function ProductsPage() {
               <span className="text-xs text-gray-400">Apache 2.0</span>
             </div>
 
-            <h1 className="text-6xl font-black tracking-tight text-white md:text-7xl">
+            <h1 className="text-5xl font-bold leading-[1.1] tracking-tight text-white lg:text-6xl">
               Trustabl <span className="text-[#2DD4BF]">Agent Analyzer</span>
             </h1>
 
@@ -170,31 +170,60 @@ export default function ProductsPage() {
               </p>
             </div>
 
-            <div className="mx-auto mt-10 flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10">
-                  <Bot className="h-4 w-4 text-[#2DD4BF]" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-white">Also available for AI agents</p>
-                  <p className="text-xs text-gray-400">Clean Markdown version — easy for agents to discover, read, parse, and deploy</p>
-                </div>
+            <div className="mx-auto mt-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] text-left">
+              <div className="flex border-b border-white/8">
+                {(['homebrew', 'scoop', 'docker'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as never)}
+                    className={`px-5 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      activeTab === tab
+                        ? 'border-b-2 border-[#2DD4BF] text-[#2DD4BF]'
+                        : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
-              <a
-                href="trustabl-analyzer-landing.md"
-                className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[#2DD4BF]/40 hover:text-[#2DD4BF] whitespace-nowrap"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                View / Download .md
-              </a>
+              <div className="p-5">
+                {activeTab === 'homebrew' && (
+                  <div className="flex items-center justify-between gap-3">
+                    <pre className="flex-1 overflow-x-auto font-mono text-sm text-[#2DD4BF]">brew install trustabl/tap/trustabl</pre>
+                    <button onClick={() => copyCmd('brew install trustabl/tap/trustabl')} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                      {copiedCmd === 'brew install trustabl/tap/trustabl' ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+                )}
+                {activeTab === 'scoop' && (() => {
+                  const scoopCmds = 'scoop bucket add trustabl https://github.com/trustabl/scoop-bucket\nscoop install trustabl';
+                  return (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 space-y-1">
+                        <pre className="overflow-x-auto font-mono text-sm text-[#2DD4BF]">scoop bucket add trustabl https://github.com/trustabl/scoop-bucket</pre>
+                        <pre className="overflow-x-auto font-mono text-sm text-[#2DD4BF]">scoop install trustabl</pre>
+                      </div>
+                      <button onClick={() => copyCmd(scoopCmds)} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                        {copiedCmd === scoopCmds ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  );
+                })()}
+                {activeTab === 'docker' && (
+                  <div className="flex items-center justify-between gap-3">
+                    <pre className="flex-1 overflow-x-auto font-mono text-sm text-[#2DD4BF]">{`docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo`}</pre>
+                    <button onClick={() => copyCmd(`docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo`)} className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#2DD4BF]">
+                      {copiedCmd === `docker run --rm -v "$PWD:/repo" ghcr.io/trustabl/trustabl:latest scan /repo` ? <Check className="h-4 w-4 text-[#2DD4BF]" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
         {/* ── AGENT RELIABILITY GAP ── */}
-        <section className="border-b border-white/8 py-24">
+        <section className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
@@ -218,7 +247,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── STATS BAR ── */}
-        <section className="border-b border-white/8 bg-white/[0.02] py-12">
+        <section className="border-b border-white/8 bg-white/[0.02] py-12 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
               {[
@@ -240,7 +269,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── CORE ANALYSIS ── */}
-        <section className="border-b border-white/8 py-24">
+        <section className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 flex items-end justify-between">
               <div>
@@ -300,7 +329,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="border-b border-white/8 py-24">
+        <section className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
@@ -326,7 +355,7 @@ export default function ProductsPage() {
 
 
         {/* ── QUICK START ── */}
-        <section id="quickstart" className="border-b border-white/8 py-24">
+        <section id="quickstart" className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Quick start</p>
@@ -420,7 +449,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── ROADMAP ── */}
-        <section className="border-b border-white/8 py-24">
+        <section className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-16 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Product Roadmap</p>
@@ -502,7 +531,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── WHY OPEN SOURCE ── */}
-        <section className="border-b border-white/8 py-24">
+        <section className="border-b border-white/8 py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Why open source</p>
@@ -540,7 +569,7 @@ export default function ProductsPage() {
         </section>
 
         {/* ── FINAL CTA ── */}
-        <section className="py-24">
+        <section className="py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
               Ready to make your agents production-grade?
