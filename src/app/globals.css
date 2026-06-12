@@ -2,6 +2,7 @@
 
 @theme inline {
   --font-sans: var(--font-poppins);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 :root {

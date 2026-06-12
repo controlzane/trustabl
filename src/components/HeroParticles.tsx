@@ -92,7 +92,8 @@ export default function HeroParticles() {
     }
 
     resize();
-    window.addEventListener('resize', resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
     let raf = 0;
     function draw() {
@@ -170,7 +171,7 @@ export default function HeroParticles() {
     draw();
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
     };
   }, []);
 
