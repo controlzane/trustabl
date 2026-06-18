@@ -479,7 +479,7 @@ export default function Home() {
     {
       n: '03',
       title: 'Get Fixes in Your IDE',
-      desc: 'Auto-generated fixes appear in Cursor or Claude Code. Review suggestions right where you code.',
+      desc: 'Trustabl applies industry best practices and predefined rules. Suggested fixes appear in Cursor or Claude Code for your review.',
       icon: <ShieldCheck className="h-5 w-5" />,
     },
     {
