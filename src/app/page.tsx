@@ -15,7 +15,7 @@ import HeroParticles from '@/components/HeroParticles';
 import PreReleaseBanner from '@/components/PreReleaseBanner';
 import IdeWindow from '@/components/IdeWindow';
 import Footer from '@/components/Footer';
-import { useGithubStars } from '@/hooks/useGithubStars';
+import { useGithubDownloads } from '@/hooks/useGithubDownloads';
 
 const githubRepoUrl = 'https://github.com/trustabl';
 
@@ -272,7 +272,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scanTick, setScanTick] = useState(0);
   const [copied, setCopied] = useState(false);
-  const starCount = useGithubStars();
+  const downloadCount = useGithubDownloads();
   const [atmModal, setAtmModal] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -466,26 +466,26 @@ export default function Home() {
   const steps = [
     {
       n: '01',
-      title: 'Connect GitHub',
-      desc: 'One-click import of your tools and skills.',
+      title: 'Enable GitHub Action',
+      desc: 'Add Trustabl to your GitHub Actions. Scans run automatically on every pull request.',
       icon: <GitBranch className="h-5 w-5" />,
     },
     {
       n: '02',
-      title: 'Get Instantly Scored',
-      desc: 'See a clear Production Readiness Score and prioritized findings.',
+      title: 'Detect Production Gaps',
+      desc: 'Trustabl scans your AI agents and identifies missing error handling, retries, validation, and guardrails.',
       icon: <BarChart3 className="h-5 w-5" />,
     },
     {
       n: '03',
-      title: '80-90% Auto-Hardened',
-      desc: 'We generate validation, retries, observability, and guardrails for you.',
+      title: 'Get Fixes in Your IDE',
+      desc: 'Auto-generated fixes appear in Cursor or Claude Code. Review suggestions right where you code.',
       icon: <ShieldCheck className="h-5 w-5" />,
     },
     {
       n: '04',
-      title: 'Review & Export',
-      desc: 'Approve changes in minutes and export hardened versions back to GitHub.',
+      title: 'Merge & Deploy',
+      desc: 'Approve fixes in your IDE, commit to GitHub, and deploy production-ready agents.',
       icon: <Download className="h-5 w-5" />,
     },
   ];
@@ -825,71 +825,141 @@ export default function Home() {
           </div>
         );
       case '02': {
-        const findings = [
-          { icon: '✗', label: 'Missing retry logic',    badge: 'HIGH', cls: 'text-red-400',    badgeCls: 'bg-red-500/15 text-red-400' },
-          { icon: '⚠', label: 'No input validation',    badge: 'MED',  cls: 'text-yellow-400', badgeCls: 'bg-yellow-500/15 text-yellow-400' },
-          { icon: '✓', label: 'Schema structure OK',     badge: null,   cls: 'text-[#2DD4BF]',  badgeCls: '' },
+        const scanFiles = [
+          { name: 'agent.ts', result: '3 gaps', resultCls: 'text-red-400', dotCls: 'bg-red-400', enterDelay: '0.15s', resultDelay: '0.75s' },
+          { name: 'tools/search.ts', result: '1 gap', resultCls: 'text-yellow-400', dotCls: 'bg-yellow-400', enterDelay: '0.55s', resultDelay: '1.15s' },
+          { name: 'tools/deploy.ts', result: '2 gaps', resultCls: 'text-red-400', dotCls: 'bg-red-400', enterDelay: '0.95s', resultDelay: '1.55s' },
+          { name: 'skills/summarize.ts', result: 'clean', resultCls: 'text-[#2DD4BF]', dotCls: 'bg-[#2DD4BF]', enterDelay: '1.35s', resultDelay: '1.95s' },
         ];
         return (
-          <div key={scanTick} className="flex h-36 flex-col justify-between overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-4 py-3">
-            {/* Findings */}
-            <div className="space-y-1.5">
-              {findings.map((f, i) => (
-                <div
-                  key={f.label}
-                  className="flex items-center gap-2 opacity-0"
-                  style={{ animation: 'fadeSlideIn 0.5s cubic-bezier(0.25,0.1,0.25,1) forwards', animationDelay: `${0.25 + i * 0.38}s` }}
-                >
-                  <span className={`text-sm font-bold ${f.cls}`}>{f.icon}</span>
-                  <span className="flex-1 truncate text-xs text-gray-300">{f.label}</span>
-                  {f.badge && (
-                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${f.badgeCls}`}>
-                      {f.badge}
+          <div key={scanTick} className="flex h-44 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-5 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" style={{ animation: 'scanPulse 1s ease-in-out infinite' }} />
+                <span className="text-[10px] font-medium uppercase tracking-widest text-[#2DD4BF]">Scanning</span>
+              </div>
+              <span className="font-mono text-[10px] text-gray-600 opacity-0" style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '2.2s' }}>4 files · 6 gaps</span>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              {scanFiles.map((f) => (
+                <div key={f.name} className="flex items-center gap-2.5 opacity-0" style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: f.enterDelay }}>
+                  <div className={`h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-600`} style={{ animation: `dotColor 0.3s ease forwards ${f.resultDelay}` }} data-color={f.dotCls} />
+                  <span className="flex-1 truncate font-mono text-[11px] text-gray-400">{f.name}</span>
+                  <span className="relative w-14 text-right">
+                    <span className="absolute inset-0 flex items-center justify-end gap-0.5 text-[10px] text-gray-600" style={{ animation: `fadeOut 0.2s ease forwards`, animationDelay: f.resultDelay }}>
+                      <span style={{ animation: 'blink 0.6s step-end infinite' }}>·</span>
+                      <span style={{ animation: 'blink 0.6s step-end infinite 0.2s' }}>·</span>
+                      <span style={{ animation: 'blink 0.6s step-end infinite 0.4s' }}>·</span>
                     </span>
-                  )}
+                    <span className={`text-[10px] font-semibold opacity-0 ${f.resultCls}`} style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: f.resultDelay }}>{f.result}</span>
+                  </span>
                 </div>
               ))}
-            </div>
-            {/* Score */}
-            <div
-              className="flex items-center gap-2 border-t border-white/8 pt-2 opacity-0"
-              style={{ animation: 'fadeSlideIn 0.5s cubic-bezier(0.25,0.1,0.25,1) forwards', animationDelay: '1.85s' }}
-            >
-              <span className="text-xs text-gray-500">Score</span>
-              <span className="text-sm font-bold text-red-400">38%</span>
-              <span className="rounded px-2 py-0.5 text-[10px] font-bold bg-red-500/15 text-red-400 uppercase tracking-wide">High Risk</span>
             </div>
           </div>
         );
       }
       case '03':
-        return <ScoreRing tick={scanTick} />;
+        return (
+          <div key={scanTick} className="flex h-44 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-5 py-4">
+            {/* IDE title bar */}
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-red-500/60" />
+                  <div className="h-2 w-2 rounded-full bg-yellow-500/60" />
+                  <div className="h-2 w-2 rounded-full bg-green-500/60" />
+                </div>
+                <span className="text-[10px] text-gray-500">agent.ts</span>
+              </div>
+              <span className="text-[9px] font-medium uppercase tracking-widest text-[#2DD4BF] opacity-0" style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '0.2s' }}>
+                Trustabl Fix
+              </span>
+            </div>
+            {/* Code diff */}
+            <div className="flex-1 font-mono text-[11px] leading-relaxed">
+              {/* Existing line — static context */}
+              <div className="flex items-center gap-2 text-gray-600">
+                <span className="w-4 text-right">11</span>
+                <span className="px-1.5 text-gray-500">{'// fetch data'}</span>
+              </div>
+              {/* Removed line — strikethrough fade */}
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '0.5s' }}
+              >
+                <span className="w-4 text-right text-gray-600">12</span>
+                <span className="rounded bg-red-500/10 px-1.5 text-red-400 line-through decoration-red-500/40"><span className="mr-1 text-red-500/60">−</span>const res = await fetch(url);</span>
+              </div>
+              {/* Inserted lines — typed in feel */}
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.1s' }}
+              >
+                <span className="w-4 text-right text-gray-600">12</span>
+                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>const res = await retry(</span>
+              </div>
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.4s' }}
+              >
+                <span className="w-4 text-right text-gray-600">13</span>
+                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>&nbsp;&nbsp;() =&gt; fetch(url), {'{ retries: 3 }'}</span>
+              </div>
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.65s' }}
+              >
+                <span className="w-4 text-right text-gray-600">14</span>
+                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>);</span>
+              </div>
+            </div>
+            {/* Accept bar */}
+            <div
+              className="mt-2 flex items-center justify-end gap-2 border-t border-white/5 pt-2 opacity-0"
+              style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '2.1s' }}
+            >
+              <span className="rounded bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-gray-500">Dismiss</span>
+              <span className="rounded bg-[#2DD4BF]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#2DD4BF]">Accept Fix</span>
+            </div>
+          </div>
+        );
       default:
         return (
-          <div className="flex h-36 items-center justify-center gap-5 overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C]">
-            {/* Approved */}
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#2DD4BF]/30 bg-[#2DD4BF]/10">
-                <span className="text-xl font-black text-[#2DD4BF]">✓</span>
-              </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-[#2DD4BF]">Approved</span>
-            </div>
-            {/* Arrow — pulsates continuously */}
-            <div className="flex items-center gap-0.5"
-              style={{ animation: 'arrowPulse 1.4s ease-in-out infinite' }}>
-              <div className="h-px w-10 bg-[#2DD4BF]/40" />
-              <svg className="h-3 w-3 text-[#2DD4BF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-            {/* GitHub */}
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="rgba(209,213,219,0.85)">
-                  <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+          <div key={scanTick} className="flex h-44 items-center justify-center gap-5 overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-6 py-4">
+            {/* Merge icon */}
+            <div
+              className="relative flex-shrink-0 opacity-0"
+              style={{ animation: 'scaleFadeIn 0.5s ease forwards', animationDelay: '0.2s' }}
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/5">
+                <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="18" r="3" />
+                  <circle cx="6" cy="6" r="3" />
+                  <path d="M6 21V9a9 9 0 0 0 9 9" />
                 </svg>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">GitHub</span>
+              <div
+                className="absolute -inset-2 rounded-3xl border border-[#2DD4BF]/10"
+                style={{ animation: 'mergeGlow 2s ease-in-out infinite', animationDelay: '0.8s' }}
+              />
+            </div>
+            {/* Status text */}
+            <div className="flex flex-col gap-2.5">
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '0.6s' }}
+              >
+                <span className="text-sm font-semibold text-white">Merged to main</span>
+                <span className="text-sm font-bold text-[#2DD4BF]">✓</span>
+              </div>
+              <div
+                className="flex items-center gap-2 opacity-0"
+                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '1.3s' }}
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF] shadow-[0_0_6px_rgba(45,212,191,0.6)]" />
+                <span className="text-xs font-medium text-[#2DD4BF]">Deployed to production</span>
+              </div>
             </div>
           </div>
         );
@@ -943,10 +1013,10 @@ export default function Home() {
                 <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
               <span>GitHub</span>
-              {starCount !== null && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-amber-400/15 px-2 py-0.5 text-[12px] font-semibold text-amber-400">
-                  <svg className="h-3 w-3 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  {starCount >= 1000 ? `${(starCount / 1000).toFixed(1)}k` : starCount}
+              {downloadCount !== null && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-400/15 px-2 py-0.5 text-[12px] font-semibold text-emerald-400">
+                  <svg className="h-3 w-3 fill-emerald-400" viewBox="0 0 24 24"><path d="M4.75 17.25a.75.75 0 0 1 .75.75v2.25h13v-2.25a.75.75 0 0 1 1.5 0V21a.75.75 0 0 1-.75.75H4.75A.75.75 0 0 1 4 21v-3a.75.75 0 0 1 .75-.75zm7.25-15a.75.75 0 0 1 .75.75v10.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0l-5-5a.75.75 0 0 1 1.06-1.06l3.72 3.72V3a.75.75 0 0 1 .75-.75z"/></svg>
+                  {downloadCount >= 1000 ? `${(downloadCount / 1000).toFixed(1)}k` : downloadCount}
                 </span>
               )}
             </a>
@@ -993,8 +1063,8 @@ export default function Home() {
           <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex flex-col items-center text-center">
               <h1 className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight lg:text-6xl">
-                Make Your Agents{' '}
-                <span className="text-[#2DD4BF]">Production-Ready in Minutes</span>
+                Better context.{' '}
+                <span className="text-[#2DD4BF]">Better agents.</span>
               </h1>
             </div>
 
