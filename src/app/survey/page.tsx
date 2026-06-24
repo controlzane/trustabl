@@ -5,10 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import HeroParticles from '@/components/HeroParticles';
 import PreReleaseBanner from '@/components/PreReleaseBanner';
-import { useGithubStars } from '@/hooks/useGithubStars';
+import { useGithubDownloads } from '@/hooks/useGithubDownloads';
 import Footer from '@/components/Footer';
 
-const GITHUB_URL = 'https://github.com/trustabl/trustabl';
+const githubRepoUrl = 'https://github.com/trustabl';
 
 const MenuIcon = () => (
   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,7 +140,7 @@ const MAX_FEATURES = 5;
 
 export default function SurveyPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const starCount = useGithubStars();
+  const downloadCount = useGithubDownloads();
 
   const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>([]);
   const [otherFramework, setOtherFramework] = useState('');
@@ -196,7 +196,7 @@ export default function SurveyPage() {
 
           <div className="hidden items-center justify-end gap-4 md:flex">
             <a
-              href={GITHUB_URL}
+              href={githubRepoUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium text-gray-300 transition-all hover:bg-white/[0.07] hover:text-white"
@@ -205,9 +205,18 @@ export default function SurveyPage() {
                 <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
               <span>GitHub</span>
-              {starCount !== null && (
-                <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-xs tabular-nums">{starCount}</span>
+              {downloadCount !== null && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-400/15 px-2 py-0.5 text-[12px] font-semibold text-emerald-400">
+                  <svg className="h-3 w-3 fill-emerald-400" viewBox="0 0 24 24"><path d="M4.75 17.25a.75.75 0 0 1 .75.75v2.25h13v-2.25a.75.75 0 0 1 1.5 0V21a.75.75 0 0 1-.75.75H4.75A.75.75 0 0 1 4 21v-3a.75.75 0 0 1 .75-.75zm7.25-15a.75.75 0 0 1 .75.75v10.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0l-5-5a.75.75 0 0 1 1.06-1.06l3.72 3.72V3a.75.75 0 0 1 .75-.75z"/></svg>
+                  {downloadCount >= 1000 ? `${(downloadCount / 1000).toFixed(1)}k` : downloadCount}
+                </span>
               )}
+            </a>
+            <a
+              href={githubRepoUrl}
+              className="rounded-xl bg-[#2DD4BF] px-5 py-2 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
+            >
+              Try It
             </a>
           </div>
 
@@ -217,12 +226,17 @@ export default function SurveyPage() {
         </div>
 
         {menuOpen && (
-          <div className="border-t border-white/5 bg-[#050506]/95 px-4 py-4 md:hidden">
-            {navLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="block py-2 text-sm text-gray-400 transition-colors hover:text-white">
-                {link.label}
-              </Link>
-            ))}
+          <div className="border-t border-white/5 bg-[#050506]/98 px-4 py-5 backdrop-blur-md md:hidden">
+            <div className="space-y-4">
+              {navLinks.map((link) => (
+                <Link key={link.label} href={link.href} className="block text-sm font-medium text-gray-400 transition-colors hover:text-white">
+                  {link.label}
+                </Link>
+              ))}
+              <a href={githubRepoUrl} className="block rounded-xl bg-[#2DD4BF] px-5 py-2.5 text-center text-sm font-medium text-[#08121F]">
+                Try It
+              </a>
+            </div>
           </div>
         )}
       </nav>
@@ -232,15 +246,10 @@ export default function SurveyPage() {
       {/* HERO */}
       <section className="relative pt-36 pb-16 sm:pt-40">
         <HeroParticles />
-        <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Help shape what Trustabl builds next
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-gray-400">
-            We're adding new fields and checks to the Agent Analyzer, and we want to build them in the order you actually need. Takes about 2 minutes.
-          </p>
-          <p className="mt-3 text-sm text-gray-500 italic">
-            We're only asking about your setup and which features matter to you — never your code or your repos.
+        <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 text-center sm:px-6">
+          <h1 className="whitespace-nowrap text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Help shape what Trustabl builds next</h1>
+          <p className="mt-5 whitespace-nowrap text-base text-gray-400 sm:text-lg">
+            Tell us which features matter most — takes about 2 minutes, never touches your code.
           </p>
         </div>
       </section>
@@ -253,7 +262,7 @@ export default function SurveyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold">Thanks for your input!</h2>
+            <h2 className="text-center text-2xl font-bold">Thanks for your input!</h2>
             <p className="mt-3 text-gray-400">
               Your responses help us prioritize the right features. We'll let you know when the things you picked go live.
             </p>
@@ -268,8 +277,8 @@ export default function SurveyPage() {
           {/* SECTION 1 — Setup */}
           <div className="space-y-12">
             <div>
-              <h2 className="text-2xl font-bold">Tell us about your setup</h2>
-              <div className="mt-1 h-px bg-gradient-to-r from-[#2DD4BF]/40 to-transparent" />
+              <h2 className="text-center text-2xl font-bold">Tell us about your setup</h2>
+              <div className="mx-auto mt-1 h-px w-48 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent" />
             </div>
 
             {/* Q1 Frameworks */}
@@ -484,10 +493,10 @@ export default function SurveyPage() {
           {/* SECTION 2 — What we already do */}
           <div className="mt-20 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold">What we already do</h2>
-              <div className="mt-1 h-px bg-gradient-to-r from-[#2DD4BF]/40 to-transparent" />
+              <h2 className="text-center text-2xl font-bold">What we already do</h2>
+              <div className="mx-auto mt-1 h-px w-48 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent" />
             </div>
-            <p className="text-sm text-gray-400">Quick context before you choose. Trustabl already scans your tools and generates the basics automatically:</p>
+            <p className="text-center text-sm text-gray-400">Quick context before you choose. Trustabl already scans your tools and generates the basics automatically:</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 { title: 'Production readiness score', desc: 'For each tool' },
@@ -506,16 +515,16 @@ export default function SurveyPage() {
                 </div>
               ))}
             </div>
-            <p className="text-sm text-gray-500">Now we want to know what to deepen and add next.</p>
+            <p className="text-center text-sm text-gray-500">Now we want to know what to deepen and add next.</p>
           </div>
 
           {/* SECTION 3 — Pick your top 5 */}
           <div className="mt-20 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold">Pick your top 5</h2>
-              <div className="mt-1 h-px bg-gradient-to-r from-[#2DD4BF]/40 to-transparent" />
+              <h2 className="text-center text-2xl font-bold">Pick your top 5</h2>
+              <div className="mx-auto mt-1 h-px w-48 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent" />
             </div>
-            <p className="text-sm text-gray-400">
+            <p className="text-center text-sm text-gray-400">
               Out of everything below, which 5 would help you the most right now?
               <span className="ml-1 text-gray-500">Don't overthink it — pick the ones that match your real pain.</span>
             </p>
@@ -584,8 +593,8 @@ export default function SurveyPage() {
           {/* SECTION 4 — Open question */}
           <div className="mt-20 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold">One open question</h2>
-              <div className="mt-1 h-px bg-gradient-to-r from-[#2DD4BF]/40 to-transparent" />
+              <h2 className="text-center text-2xl font-bold">One open question</h2>
+              <div className="mx-auto mt-1 h-px w-48 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent" />
             </div>
             <div>
               <label className="text-base font-semibold">
@@ -604,10 +613,10 @@ export default function SurveyPage() {
           {/* SECTION 5 — Early access */}
           <div className="mt-20 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold">Want early access?</h2>
-              <div className="mt-1 h-px bg-gradient-to-r from-[#2DD4BF]/40 to-transparent" />
+              <h2 className="text-center text-2xl font-bold">Want early access?</h2>
+              <div className="mx-auto mt-1 h-px w-48 bg-gradient-to-r from-transparent via-[#2DD4BF]/40 to-transparent" />
             </div>
-            <p className="text-sm text-gray-400">
+            <p className="text-center text-sm text-gray-400">
               Want first access to the fields you picked once we ship them? Drop your email (optional) and we'll let you know — and tell you when your requests go live.
             </p>
             <input
