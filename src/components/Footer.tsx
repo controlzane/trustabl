@@ -67,6 +67,7 @@ export default function Footer() {
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/8 pt-6 sm:flex-row">
           <p className="text-xs text-gray-500">© 2026 Trustabl. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
+            <Link href="/telemetry" className="transition-colors hover:text-white">Telemetry</Link>
             <Link href="/privacy" className="transition-colors hover:text-white">Privacy</Link>
             <Link href="/terms" className="transition-colors hover:text-white">Terms</Link>
           </div>
