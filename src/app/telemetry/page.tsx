@@ -22,11 +22,18 @@ const NEVER_COLLECT = [
   'Repo names, org names, usernames, email addresses, IP addresses',
   'File paths, directory names, or filenames from the scanned repo',
   'Source code — no snippets in any form, including inside error messages',
-  'Finding content — explanation text, fix text, matched code',
+  'Finding content — explanation text, fix text, matched code — anything a rule produced',
   'Tool or agent names from the scanned codebase',
-  'Raw error strings — errors are bucketed into a closed enum before sending',
-  'Env var values — CI provider detected by presence only, never values',
+  'LLM details — provider name, model name, API key presence',
   'Exact file counts — coarse size buckets are used instead',
+  'Env var values — CI provider detected by variable presence only, never values',
+  'Raw error strings — errors are bucketed into a closed enum before sending',
+];
+
+const LEVELS = [
+  { level: 'Disabled', sent: 'Nothing' },
+  { level: 'Minimal', sent: 'anonymous_id, cli_version, ci_provider, is_new_install, exit_code — one event at scan end' },
+  { level: 'Full', sent: 'All events and properties listed below' },
 ];
 
 const EVENTS: EventBlock[] = [
@@ -49,7 +56,7 @@ const EVENTS: EventBlock[] = [
     desc: 'Fired on a successful scan (exit code 0 or 1)',
     fields: [
       { name: 'duration_ms', type: 'int', note: 'Wall-clock milliseconds' },
-      { name: 'repo_size_bucket', type: 'string', note: 'small (<20 files), medium (<200), large (≥200)' },
+      { name: 'repo_size_bucket', type: 'string', note: 'small (<20 files), medium (<200), large (≥200). Counts Python, TypeScript, JavaScript, Go, YAML, JSON, Markdown, C#, PHP, and Rust files.' },
       { name: 'sdks_detected', type: '[]string', note: 'SDKs observed in code' },
       { name: 'languages_detected', type: '[]string', note: 'Languages recognized in the repo' },
       { name: 'tools_count', type: 'int', note: 'Tool definitions discovered' },
@@ -60,30 +67,46 @@ const EVENTS: EventBlock[] = [
       { name: 'schema_version', type: 'int', note: 'Rule schema version' },
       { name: 'exit_code', type: 'int', note: '0 (clean) or 1 (findings present)' },
       { name: 'features_used', type: '[]string', note: 'attest, vuln_scan, sarif_out, json_out, bom_out, no_rules_update' },
-      { name: 'repo_id_hash', type: 'string', note: 'One-way hash of CI repo env var, used for dedup only — the repo name cannot be recovered. Empty outside CI.' },
+      { name: 'repo_id_hash', type: 'string', note: '32-char hex prefix of a salted SHA-256 of the CI repo env var (GITHUB_REPOSITORY, CI_PROJECT_PATH, CIRCLE_PROJECT_REPONAME). One-way — the repo name cannot be recovered. Used only for dedup. Empty outside CI or with no recognized repo env var.' },
     ],
   },
   {
     name: 'scan.failed',
-    desc: 'Fired when the scan exits with code 2 (scanner or I/O error)',
+    desc: 'Fired when the scan exits with code 2 (a scanner or I/O error, not a findings-based exit)',
     fields: [
       { name: 'error_category', type: 'string', note: 'Closed enum — raw error string is never sent. Values: rules_fetch_failed, clone_failed, parse_error, no_rules, unknown.' },
+      { name: 'phase', type: 'string', note: 'Pipeline phase where failure occurred, derived from error_category. Values: rules, clone, inventory, unknown.' },
       { name: 'duration_ms', type: 'int', note: 'Wall-clock milliseconds until failure' },
+      { name: 'rules_sha', type: 'string', note: 'Resolved rules SHA at time of failure. Empty if failure occurred before rules were resolved.' },
+      { name: 'schema_version', type: 'int', note: 'Rule schema version at time of failure. 0 if not yet resolved.' },
     ],
   },
   {
     name: 'command.run',
     desc: 'Fired for every non-scan subcommand invocation',
     fields: [
-      { name: 'command', type: 'string', note: 'version, mcp, enrich, attest, verify, capabilities, rules.pull, rules.validate, vulndb.pull, llm.list, llm.key.set, llm.key.get, llm.key.delete, llm.model.set, llm.provider.set, llm.provider.list' },
+      { name: 'command', type: 'string', note: 'version, mcp, enrich, attest, verify, capabilities, rules.pull, rules.validate, vulndb.pull' },
+    ],
+  },
+  {
+    name: 'crash.reported',
+    desc: 'Fired only when a user explicitly chooses "Send anonymous crash report" after a panic — never sent automatically. Independent of the telemetry setting: fires the same whether telemetry is full, minimal, or disabled.',
+    fields: [
+      { name: 'panic_value', type: 'string', note: 'Recovered panic value, best-effort redacted of common secret shapes (sk-ant-*, sk-proj-*, long hex/base64). Not guaranteed free of all sensitive content.' },
+      { name: 'stack', type: 'string', note: 'Scrubbed stack frames only — no argument values, no source lines, file paths trimmed to basename:line.' },
+      { name: 'version', type: 'string', note: 'CLI build version' },
+      { name: 'commit', type: 'string', note: 'Build commit SHA' },
+      { name: 'os', type: 'string', note: 'GOOS' },
+      { name: 'arch', type: 'string', note: 'GOARCH' },
+      { name: 'rules_sha', type: 'string', note: 'Always empty — build meta carries no resolved SHA at the panic site. Reserved for future use.' },
     ],
   },
 ];
 
 const OPTOUT_METHODS = [
-  { title: 'Environment variable — highest priority', desc: 'Overrides the config file. Takes effect immediately, session-scoped.', code: 'export TRUSTABL_TELEMETRY=0' },
-  { title: 'CLI command — persisted', desc: 'Writes your preference to the config file. Persists across sessions.', code: 'trustabl telemetry off' },
-  { title: 'Config file — manual', desc: 'Edit ~/.config/trustabl/telemetry.json directly.', code: '{"enabled": false, "anonymous_id": "your-uuid-here"}' },
+  { title: 'Environment variable — highest priority', desc: 'Overrides the config file.', code: 'export TRUSTABL_TELEMETRY=disabled   # or: 0\nexport TRUSTABL_TELEMETRY=minimal\nexport TRUSTABL_TELEMETRY=full       # or: 1' },
+  { title: 'CLI commands — persisted', desc: 'Writes your preference to the config file. Persists across sessions.', code: 'trustabl telemetry off      # disable\ntrustabl telemetry minimal  # version and outcome only\ntrustabl telemetry full     # all anonymous usage stats\ntrustabl telemetry status   # show current level and its source' },
+  { title: 'Config file — manual', desc: 'Edit ~/.config/trustabl/telemetry.json directly. Valid mode values: "disabled", "minimal", "full".', code: '{"mode": "minimal", "anonymous_id": "your-uuid-here"}' },
 ];
 
 export default function TelemetryPage() {
@@ -150,17 +173,33 @@ export default function TelemetryPage() {
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Legal</p>
           <h1 className="text-4xl font-semibold leading-tight lg:text-5xl">Telemetry</h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-400">
-            Trustabl collects anonymous usage data to improve the product. This page is the complete list of every event and every property that can be sent — updated in the same commit as any schema change.
+            Trustabl collects anonymous usage data to help improve the product — to understand which SDKs users scan most often, catch reliability issues, and measure adoption. This page is the complete and authoritative list of every event and every property that can be sent — updated in the same commit as any event schema change.
           </p>
 
-          {/* Opt-out summary bar */}
+          {/* Opt-in summary bar */}
           <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 sm:flex-row sm:items-center">
             <p className="text-sm text-gray-400">
-              Telemetry is <span className="font-semibold text-white">on by default</span> and opt-out.
+              Telemetry is <span className="font-semibold text-white">off by default</span>. On your first interactive scan, Trustabl asks you to choose a level.
             </p>
             <div className="flex flex-wrap gap-2">
-              <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">trustabl telemetry off</code>
-              <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">TRUSTABL_TELEMETRY=0</code>
+              <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">trustabl telemetry status</code>
+              <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">TRUSTABL_TELEMETRY=full</code>
+            </div>
+          </div>
+
+          {/* Telemetry levels */}
+          <div className="mt-16">
+            <h2 className="mb-2 text-xl font-semibold text-white">Telemetry levels</h2>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              In CI (<code className="rounded border border-white/8 bg-white/[0.05] px-1.5 py-0.5 font-mono text-xs text-[#2DD4BF]">CI=true</code> or a recognized CI provider env var), telemetry defaults to Disabled unless <code className="rounded border border-white/8 bg-white/[0.05] px-1.5 py-0.5 font-mono text-xs text-[#2DD4BF]">TRUSTABL_TELEMETRY</code> is explicitly set.
+            </p>
+            <div className="mt-6 space-y-3">
+              {LEVELS.map((l) => (
+                <div key={l.level} className="flex flex-col gap-1 rounded-2xl border border-white/8 bg-white/[0.03] p-5 sm:flex-row sm:items-start sm:gap-4">
+                  <span className="w-24 flex-shrink-0 text-sm font-semibold text-white">{l.level}</span>
+                  <p className="text-sm leading-relaxed text-gray-400">{l.sent}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -230,9 +269,30 @@ export default function TelemetryPage() {
             </div>
           </div>
 
-          {/* How to opt out */}
+          {/* First-run prompt */}
           <div className="mt-16">
-            <h2 className="mb-2 text-xl font-semibold text-white">How to opt out</h2>
+            <h2 className="mb-2 text-xl font-semibold text-white">First-run prompt</h2>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              On the first scan in an interactive terminal (TTY), before any scan output, Trustabl asks you to choose a level. The choice is saved to <code className="rounded border border-white/8 bg-white/[0.05] px-1.5 py-0.5 font-mono text-xs text-[#2DD4BF]">~/.config/trustabl/telemetry.json</code> and never asked again. Empty input or no response defaults to <span className="font-semibold text-white">Disabled</span>. The prompt is never shown in CI or when output is piped.
+            </p>
+            <pre className="mt-4 overflow-x-auto rounded-2xl border border-white/8 bg-[#050506] p-5 font-mono text-xs leading-relaxed text-gray-300">
+{`Trustabl collects anonymous data to help improve the product.
+No source code, file paths, repo names, or finding details are ever sent.
+Learn more: https://trustabl.ai/telemetry
+
+Choose a telemetry level:
+  1. Minimal  - Version and outcome
+  2. Full     - Usage stats
+  3. Disabled - No data
+
+Enter 1, 2, or 3 [default: 3]: `}
+            </pre>
+          </div>
+
+          {/* Manage telemetry */}
+          <div id="manage-telemetry" className="mt-16">
+            <h2 className="mb-2 text-xl font-semibold text-white">Manage telemetry</h2>
+            <p className="mt-3 text-gray-400 leading-relaxed">Three mechanisms for explicit control, evaluated in this order:</p>
             <div className="mt-6 space-y-3">
               {OPTOUT_METHODS.map((method, i) => (
                 <div key={method.title} className="flex items-start gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-5">
@@ -240,11 +300,45 @@ export default function TelemetryPage() {
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-semibold text-white">{method.title}</h3>
                     <p className="mt-1 text-sm text-gray-500">{method.desc}</p>
-                    <code className="mt-2 block overflow-x-auto rounded-lg border border-white/8 bg-[#050506] px-3 py-2 font-mono text-xs text-[#2DD4BF]">{method.code}</code>
+                    <pre className="mt-2 overflow-x-auto rounded-lg border border-white/8 bg-[#050506] px-3 py-2 font-mono text-xs text-[#2DD4BF]">{method.code}</pre>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Where data is stored locally */}
+          <div className="mt-16">
+            <h2 className="mb-2 text-xl font-semibold text-white">Where data is stored locally</h2>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+                <code className="font-mono text-xs text-[#2DD4BF]">~/.config/trustabl/telemetry.json</code>
+                <p className="mt-2 text-sm leading-relaxed text-gray-400">Holds the <span className="text-gray-300">mode</span> setting and the stable anonymous UUID. Created when a telemetry level is chosen (first-run prompt or CLI command), directory permissions <span className="text-gray-300">0700</span>, file permissions <span className="text-gray-300">0600</span>. Never created in CI.</p>
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+                <code className="font-mono text-xs text-[#2DD4BF]">~/.config/trustabl/crash-&lt;timestamp&gt;.log</code>
+                <p className="mt-2 text-sm leading-relaxed text-gray-400">Scrubbed crash report written on an unrecovered panic, mode <span className="text-gray-300">0600</span>.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Crash reports */}
+          <div className="mt-16">
+            <h2 className="mb-2 text-xl font-semibold text-white">Crash reports</h2>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              When Trustabl experiences an unrecovered panic, it always writes a scrubbed crash report to <code className="rounded border border-white/8 bg-white/[0.05] px-1.5 py-0.5 font-mono text-xs text-[#2DD4BF]">~/.config/trustabl/crash-&lt;UTC-timestamp&gt;.log</code> — even in CI or non-interactive environments. This local file is the permanent, transparent record of what was captured. <span className="font-semibold text-white">Nothing is transmitted without an explicit choice</span>: after writing the file, Trustabl prompts the user with a numbered menu, shown only in an interactive terminal.
+            </p>
+            <pre className="mt-4 overflow-x-auto rounded-2xl border border-white/8 bg-[#050506] p-5 font-mono text-xs leading-relaxed text-gray-300">
+{`Help us fix it? No source code or file contents are sent.
+  1. Send anonymous crash report
+  2. Open GitHub issue
+  3. Do nothing
+
+Enter 1, 2, or 3 [default: 3]: `}
+            </pre>
+            <p className="mt-4 text-gray-400 leading-relaxed">
+              The default action is always &quot;Do nothing&quot;. All three options are shown on every crash — &quot;Send anonymous crash report&quot; is never hidden or renumbered based on the telemetry setting, because crash reporting is a separate consent from usage telemetry. Choosing it fires the <code className="rounded border border-white/8 bg-white/[0.05] px-1.5 py-0.5 font-mono text-xs text-[#2DD4BF]">crash.reported</code> event and works even when telemetry is disabled — it only no-ops if the build has no PostHog key. Choosing &quot;Open GitHub issue&quot; opens a pre-filled URL in the browser; no data is transmitted by Trustabl itself.
+            </p>
           </div>
 
           {/* Backend */}
@@ -268,7 +362,7 @@ export default function TelemetryPage() {
           <div className="mt-16 border-t border-white/8 pt-8 text-sm text-gray-500">
             <p>
               Questions? <a href="https://github.com/trustabl/trustabl/issues" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Open an issue</a> or join the{' '}
-              <a href="https://discord.gg/27sdvYnZ5" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Discord</a>.
+              <a href="https://discord.gg/maQ7QMPsB" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Discord</a>.
             </p>
             <p className="mt-2">
               This page is updated in the same commit as any event schema change. Source:{' '}
