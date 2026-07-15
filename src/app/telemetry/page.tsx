@@ -172,16 +172,16 @@ export default function TelemetryPage() {
         <section className="mx-auto max-w-4xl px-4 py-24 sm:px-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Legal</p>
           <h1 className="text-4xl font-semibold leading-tight lg:text-5xl">Telemetry</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-400">
+          <p className="mt-4 text-lg leading-relaxed text-gray-400">
             Trustabl collects anonymous usage data to help improve the product — to understand which SDKs users scan most often, catch reliability issues, and measure adoption. This page is the complete and authoritative list of every event and every property that can be sent — updated in the same commit as any event schema change.
           </p>
 
           {/* Opt-in summary bar */}
           <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 sm:flex-row sm:items-center">
-            <p className="text-sm text-gray-400">
+            <p className="max-w-md text-sm text-gray-400">
               Telemetry is <span className="font-semibold text-white">off by default</span>. On your first interactive scan, Trustabl asks you to choose a level.
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-shrink-0 flex-wrap gap-2">
               <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">trustabl telemetry status</code>
               <code className="rounded-md border border-white/8 bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#2DD4BF]">TRUSTABL_TELEMETRY=full</code>
             </div>
@@ -207,8 +207,8 @@ export default function TelemetryPage() {
           <div className="mt-16">
             <h2 className="mb-2 text-xl font-semibold text-white">What we never collect</h2>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {NEVER_COLLECT.map((item) => (
-                <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+              {NEVER_COLLECT.map((item, i) => (
+                <div key={item} className={`rounded-2xl border border-white/8 bg-white/[0.03] p-4 ${i === NEVER_COLLECT.length - 1 && NEVER_COLLECT.length % 2 === 1 ? 'sm:col-span-2' : ''}`}>
                   <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-red-400">Never</div>
                   <p className="text-sm leading-relaxed text-gray-400">{item}</p>
                 </div>
@@ -363,10 +363,6 @@ Enter 1, 2, or 3 [default: 3]: `}
             <p>
               Questions? <a href="https://github.com/trustabl/trustabl/issues" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Open an issue</a> or join the{' '}
               <a href="https://discord.gg/maQ7QMPsB" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">Discord</a>.
-            </p>
-            <p className="mt-2">
-              This page is updated in the same commit as any event schema change. Source:{' '}
-              <a href="https://github.com/trustabl/trustabl/blob/main/TELEMETRY.md" target="_blank" rel="noopener noreferrer" className="text-[#2DD4BF] hover:underline">TELEMETRY.md</a>
             </p>
           </div>
         </section>
