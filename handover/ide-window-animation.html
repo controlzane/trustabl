@@ -49,47 +49,7 @@
   .dot-red    { background: #ff5f57; }
   .dot-yellow { background: #febc2e; }
   .dot-green  { background: #28c840; }
-  .title-center {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    color: #6b7280;
-  }
-  .title-center .repo { color: #9ca3af; }
-  .title-center .sep { color: rgba(255,255,255,0.15); }
   .title-spacer { width: 44px; }
-
-  /* ── Scan status strip ── */
-  .scan-strip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(45,212,191,0.03);
-    padding: 6px 16px;
-    font-size: 11px;
-    color: #6b7280;
-  }
-  .scan-strip .play { color: #2DD4BF; }
-  .scan-strip .ci-line { display: none; color: #9ca3af; }
-  .scan-strip .counters {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10.5px;
-  }
-  .counters .grp { display: flex; align-items: center; gap: 4px; }
-  .counters .grp.red   { color: #f87171; }
-  .counters .grp.amber { color: #fbbf24; }
-  .counters .grp.pass  { color: #5EEAD4; }
-  .counters .grp .b { width: 6px; height: 6px; border-radius: 50%; display: block; }
-  .counters .grp.red .b   { background: #ef4444; }
-  .counters .grp.amber .b { background: #f59e0b; }
-  .counters .grp.pass .b  { background: #2DD4BF; }
-  .counters .grp.complete { display: none; align-items: center; gap: 6px; color: #5EEAD4; }
-  .counters .grp.complete .b { background: #2DD4BF; box-shadow: 0 0 4px #00E5CC; }
 
   /* ── Three columns ── */
   .columns {
@@ -179,39 +139,6 @@
     border-color: rgba(255,255,255,0.05);
     background: rgba(0,0,0,0.20);
   }
-  .diff-tabbar {
-    display: flex;
-    height: 36px;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(255,255,255,0.03);
-  }
-  .diff-tab {
-    display: flex;
-    height: 100%;
-    align-items: center;
-    gap: 6px;
-    border-bottom: 2px solid #2DD4BF;
-    background: rgba(45,212,191,0.05);
-    padding: 0 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: #fff;
-  }
-  .diff-tab .sq {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    border: 1px solid #2DD4BF;
-    display: block;
-  }
-  .diff-status {
-    padding: 0 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: #6b7280;
-  }
   .diff-body {
     min-height: 0;
     flex: 1;
@@ -241,15 +168,15 @@
     background: rgba(255,255,255,0.015);
   }
   .chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     background: rgba(255,255,255,0.02);
-    padding: 12px 16px;
+    padding: 10px 14px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
   }
-  .chat-header .title { font-size: 14px; font-weight: 600; color: #fff; }
-  .chat-header .count { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6b7280; }
   .chat-thread {
     min-height: 0;
     flex: 1;
@@ -258,12 +185,8 @@
     scrollbar-width: none;
   }
   .chat-thread::-webkit-scrollbar { display: none; }
-  .chat-entry {
-    padding: 12px;
-    cursor: pointer;
-    scroll-margin-top: 12px;
-  }
-  .chat-entry .stack { display: flex; flex-direction: column; gap: 16px; }
+  .chat-thread-inner { padding: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
   .chat-msg {
     font-size: 13px;
     line-height: 1.78;
@@ -289,14 +212,44 @@
     line-height: 1.6;
     color: #e5e7eb;
   }
-  .fix-applied {
+  .decision-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .decision-row .decided {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
     font-weight: 600;
-    color: #5EEAD4;
   }
+  .decision-row .decided.accepted { color: #5EEAD4; }
+  .decision-row .decided.rejected { color: #6b7280; }
+  .btn-accept {
+    border-radius: 8px;
+    border: 1px solid rgba(45,212,191,0.30);
+    background: rgba(45,212,191,0.10);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5EEAD4;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .btn-accept:hover { background: rgba(45,212,191,0.20); }
+  .btn-reject {
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .btn-reject:hover { background: rgba(255,255,255,0.10); }
   .chat-footer {
     border-top: 1px solid rgba(255,255,255,0.05);
     background: rgba(255,255,255,0.02);
@@ -330,12 +283,6 @@
     }
     .findings-col { display: block; border-right: 1px solid rgba(255,255,255,0.05); }
     .diff-col { border-right: 1px solid rgba(255,255,255,0.05); }
-    .title-center { display: flex; }
-    .scan-strip .ci-line { display: inline; }
-    .counters .grp.complete { display: flex; }
-  }
-  @media (min-width: 768px) {
-    .counters .grp.complete { display: flex; }
   }
 </style>
 </head>
@@ -349,24 +296,7 @@
       <span class="dot-yellow"></span>
       <span class="dot-green"></span>
     </div>
-    <div class="title-center mono">
-      <span class="repo">payment-agent-v2</span>
-      <span class="sep">—</span>
-      <span>trustabl scan</span>
-    </div>
     <div class="title-spacer"></div>
-  </div>
-
-  <!-- Scan status strip -->
-  <div class="scan-strip mono">
-    <span class="play">▶</span>
-    <span class="ci-line">github-actions / trustabl-action@v1 · on: push → main</span>
-    <span class="counters">
-      <span class="grp red"><span class="b"></span>3 high</span>
-      <span class="grp amber"><span class="b"></span>4 med</span>
-      <span class="grp pass"><span class="b"></span>1 pass</span>
-      <span class="grp complete"><span class="b"></span>scan complete · 2.1s</span>
-    </span>
   </div>
 
   <!-- Three columns -->
@@ -379,13 +309,6 @@
 
     <!-- Diff -->
     <div class="diff-col">
-      <div class="diff-tabbar">
-        <div class="diff-tab mono">
-          <span class="sq"></span>
-          <span id="diffFile"></span>
-        </div>
-        <span class="diff-status mono" id="diffStatus"></span>
-      </div>
       <div class="diff-body">
         <div class="diff-code" id="diffCode"></div>
       </div>
@@ -393,11 +316,12 @@
 
     <!-- Chat -->
     <div class="chat-col">
-      <div class="chat-header">
-        <div class="title">Review session</div>
-        <span class="count mono" id="chatCount"></span>
+      <div class="chat-header">Review session</div>
+      <div class="chat-thread" id="chatThread">
+        <div class="chat-thread-inner">
+          <div class="stack" id="chatStack"></div>
+        </div>
       </div>
-      <div class="chat-thread" id="chatThread"></div>
       <div class="chat-footer">
         <div class="chat-input">
           <span class="ph">Reply to Trustabl...</span>
@@ -424,7 +348,7 @@
       sevIcon: '!',
       msg1: 'Your agent passes <code>user_input</code> straight into <code>run_command()</code>. A malicious prompt can make the agent execute arbitrary shell commands at runtime. The fix adds <code>sanitize()</code> with an explicit <code>SAFE_CMDS</code> allowlist.',
       userPrompt: 'Will the allowlist break my existing tool calls?',
-      msg2: 'No — I traced every call site. All 6 callers only invoke <code>ls</code>, <code>cat</code>, or <code>git status</code>, which are in <code>SAFE_CMDS</code>. <strong style="color:#fff">No behavior change for current usage</strong> — safe to accept.',
+      msg2: 'No — I traced every call site. All 6 callers only invoke <code>ls</code>, <code>cat</code>, or <code>git status</code>, which are in <code>SAFE_CMDS</code>. <strong style="color:#fff">No behavior change for current usage.</strong>',
       isPass: false, file: 'tool_executor.py',
       diff: '<div class="ctx">38   <span class="kw">import</span> shlex, subprocess</div>\
 <div class="ctx">39   <span class="kw">from</span> trustabl.guards <span class="kw">import</span> sanitize</div>\
@@ -444,7 +368,7 @@
       sevIcon: '!',
       msg1: '<code>call_tool()</code> accepts any params dict without checking required fields or types. Malformed inputs cause silent failures that are hard to debug in production. The fix validates against the tool\'s schema before execution.',
       userPrompt: 'What happens when validation fails at runtime?',
-      msg2: '<code>validate()</code> raises <code>ToolParamError</code> with the missing field name, so the agent gets a structured error it can recover from instead of a silent <code>None</code>. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: '<code>validate()</code> raises <code>ToolParamError</code> with the missing field name, so the agent gets a structured error it can recover from instead of a silent <code>None</code>.',
       isPass: false, file: 'agent_core.py',
       diff: '<div class="ctx">63   <span class="kw">async def</span> <span class="fn">call_tool</span>(name: <span class="kw">str</span>, params: <span class="kw">dict</span>):</div>\
 <div class="ctx">64       tool = REGISTRY[name]</div>\
@@ -461,7 +385,7 @@
       sevIcon: '!',
       msg1: '<code>web_search()</code> makes a single attempt with no retry. On a network blip the agent gives up, then loops trying to recover — burning tokens. Observed in your traces: <strong style="color:#fff">47× loops, $2.40 wasted per run</strong>.',
       userPrompt: 'Why 3 attempts instead of more?',
-      msg2: '3 attempts with exponential backoff covers 99.7% of transient failures in your trace history. More attempts past that mostly delays surfacing real outages. You can tune it in <code>RETRY_CONFIG</code>. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: '3 attempts with exponential backoff covers 99.7% of transient failures in your trace history. More attempts past that mostly delays surfacing real outages. You can tune it in <code>RETRY_CONFIG</code>.',
       isPass: false, file: 'skills/web_search.py',
       diff: '<div class="ctx">73   <span class="kw">async def</span> <span class="fn">web_search</span>(query: <span class="kw">str</span>):</div>\
 <div class="ctx">74       client = <span class="fn">SearchClient</span>(api_key=settings.SEARCH_KEY)</div>\
@@ -478,7 +402,7 @@
       sevIcon: '~',
       msg1: 'Retries fire immediately with no delay. Under load this hammers the downstream API, raises error rates, and burns token budget fast. The fix doubles the delay on each attempt: 1s → 2s → 4s.',
       userPrompt: 'How much latency does this add per request?',
-      msg2: 'Zero on the happy path — backoff only applies after a failure. Worst case (2 failures then success) adds 3s total, versus the current behavior of failing outright. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: 'Zero on the happy path — backoff only applies after a failure. Worst case (2 failures then success) adds 3s total, versus the current behavior of failing outright.',
       isPass: false, file: 'skills/web_search.py',
       diff: '<div class="ctx">88   RETRY_CONFIG = {</div>\
 <div class="ctx">89       <span class="str">"attempts"</span>: 3,</div>\
@@ -493,7 +417,7 @@
       sevIcon: '~',
       msg1: '<code>generate_report()</code> writes artifacts with no logging or tracing. When something goes wrong in production you have no signal — no timing, no output size, no errors. The fix adds an <code>@observe</code> decorator.',
       userPrompt: 'Does the decorator add latency to report generation?',
-      msg2: 'Negligible — it records a timestamp before and after the call and logs asynchronously. Measured overhead is under 1ms per invocation. Read-only instrumentation, no behavior change. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: 'Negligible — it records a timestamp before and after the call and logs asynchronously. Measured overhead is under 1ms per invocation. Read-only instrumentation, no behavior change.',
       isPass: false, file: 'artifacts/report_gen.py',
       diff: '<div class="ctx">29   <span class="kw">from</span> trustabl <span class="kw">import</span> observe</div>\
 <div class="ctx">30</div>\
@@ -509,7 +433,7 @@
       sevIcon: '~',
       msg1: 'Token usage isn\'t tracked per tool call, so there\'s no visibility into which tools burn budget. Your agent looped 47× with no way to detect it. The fix wraps each call with <code>track_cost()</code>.',
       userPrompt: 'Where do the cost logs end up?',
-      msg2: 'They go through your existing logger (<code>log.info</code>) with structured fields — <code>tool</code>, <code>tokens</code>, <code>usd</code>, <code>duration_ms</code> — so they land wherever your logs already ship. Zero behavior change. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: 'They go through your existing logger (<code>log.info</code>) with structured fields — <code>tool</code>, <code>tokens</code>, <code>usd</code>, <code>duration_ms</code> — so they land wherever your logs already ship. Zero behavior change.',
       isPass: false, file: 'agent_core.py',
       diff: '<div class="ctx">114  <span class="kw">async def</span> <span class="fn">run_tool</span>(name: <span class="kw">str</span>, params: <span class="kw">dict</span>):</div>\
 <div class="removed">115 -    result = <span class="kw">await</span> tools[name].<span class="fn">call</span>(params)</div>\
@@ -525,7 +449,7 @@
       sevIcon: '~',
       msg1: 'Skill output goes straight back to the agent with no guardrail check. If a skill is compromised or returns unexpected content, the agent acts on it with no safety filter in between.',
       userPrompt: 'What exactly does POLICY block?',
-      msg2: '<code>POLICY</code> blocks prompt-injection patterns, PII leakage, and instructions that target other tools. Violations raise <code>GuardrailViolation</code> with the matched rule, so nothing is silently dropped. <strong style="color:#fff">Safe to accept.</strong>',
+      msg2: '<code>POLICY</code> blocks prompt-injection patterns, PII leakage, and instructions that target other tools. Violations raise <code>GuardrailViolation</code> with the matched rule, so nothing is silently dropped.',
       isPass: false, file: 'agent_core.py',
       diff: '<div class="ctx">199  <span class="kw">async def</span> <span class="fn">run_skill</span>(skill, input: <span class="kw">str</span>):</div>\
 <div class="ctx">200      output = <span class="kw">await</span> skill.<span class="fn">execute</span>(input)</div>\
@@ -539,10 +463,11 @@
       sevClass: 'sev-pass',
       loc: 'agent_core.py · pass',
       sevIcon: '✓',
+      isPass: true, file: 'agent_core.py',
       msg1: 'Context window usage is within safe limits across all tested runs. The agent correctly truncates history before hitting the model\'s maximum context length.',
       userPrompt: 'How often does this get re-checked?',
-      msg2: 'On every scan — each push to <code>main</code> re-runs the check against your latest traces. If usage trends toward the limit, this flips to a warning before it ever fails. <strong style="color:#fff">No fix needed.</strong>',
-      isPass: true, file: 'agent_core.py',
+      msg2: 'On every scan — each push to <code>main</code> re-runs the check against your latest traces. If usage trends toward the limit, this flips to a warning before it ever fails.',
+      msg3: 'Confirmed — the truncation guard is in place and verified against your latest traces. Context window usage is holding at 14,200 / 128,000 tokens, well inside the safe range.',
       diff: '<div class="ctx"><span class="cm"># ✓ context_window · no issues found</span></div>\
 <div class="ctx"><span class="cm">#   max observed: 14,200 / 128,000 tokens</span></div>\
 <div class="ctx"><span class="cm">#   truncation logic: present ✓</span></div>',
@@ -550,11 +475,10 @@
   ];
 
   var active = 0;
+  var decisions = {}; // idx -> 'accepted' | 'rejected'
   var findingItemEls = [];
-  var chatEntryEls = [];
 
   document.getElementById('findingsCount').textContent = FINDINGS.length;
-  document.getElementById('chatCount').textContent = FINDINGS.length + ' findings';
 
   // Build findings sidebar
   var findingsList = document.getElementById('findingsList');
@@ -600,51 +524,8 @@
     findingsList.appendChild(groupEl);
   });
 
-  // Build chat thread
-  var chatThread = document.getElementById('chatThread');
-  FINDINGS.forEach(function (item, idx) {
-    var entry = document.createElement('div');
-    entry.className = 'chat-entry';
-    entry.addEventListener('click', function () { selectFinding(idx); });
-
-    var stack = document.createElement('div');
-    stack.className = 'stack';
-
-    var msg1 = document.createElement('div');
-    msg1.className = 'chat-msg';
-    msg1.innerHTML = item.msg1;
-
-    var userRow = document.createElement('div');
-    userRow.className = 'user-msg-row';
-    var userMsg = document.createElement('div');
-    userMsg.className = 'user-msg';
-    userMsg.textContent = item.userPrompt;
-    userRow.appendChild(userMsg);
-
-    var msg2 = document.createElement('div');
-    msg2.className = 'chat-msg';
-    msg2.innerHTML = item.msg2;
-
-    stack.appendChild(msg1);
-    stack.appendChild(userRow);
-    stack.appendChild(msg2);
-
-    if (!item.isPass) {
-      var fix = document.createElement('div');
-      fix.className = 'fix-applied';
-      fix.textContent = '✓ Fix applied';
-      stack.appendChild(fix);
-    }
-
-    entry.appendChild(stack);
-    chatThread.appendChild(entry);
-    chatEntryEls[idx] = entry;
-  });
-
   function renderDiff() {
     var f = FINDINGS[active];
-    document.getElementById('diffFile').textContent = f.file;
-    document.getElementById('diffStatus').textContent = f.isPass ? 'check passed' : 'proposed fix';
     document.getElementById('diffCode').innerHTML = f.diff;
   }
 
@@ -654,24 +535,86 @@
     });
   }
 
-  function scrollChatTo(idx) {
-    var el = chatEntryEls[idx];
-    var container = chatThread;
-    if (el && container) {
-      container.scrollTo({ top: el.offsetTop - container.offsetTop - 12, behavior: 'smooth' });
+  function renderChat() {
+    var f = FINDINGS[active];
+    var stack = document.getElementById('chatStack');
+    stack.innerHTML = '';
+
+    var msg1 = document.createElement('div');
+    msg1.className = 'chat-msg';
+    msg1.innerHTML = f.msg1;
+    stack.appendChild(msg1);
+
+    var userRow = document.createElement('div');
+    userRow.className = 'user-msg-row';
+    var userMsg = document.createElement('div');
+    userMsg.className = 'user-msg';
+    userMsg.textContent = f.userPrompt;
+    userRow.appendChild(userMsg);
+    stack.appendChild(userRow);
+
+    var msg2 = document.createElement('div');
+    msg2.className = 'chat-msg';
+    msg2.innerHTML = f.msg2;
+    stack.appendChild(msg2);
+
+    if (f.msg3) {
+      var msg3 = document.createElement('div');
+      msg3.className = 'chat-msg';
+      msg3.innerHTML = f.msg3;
+      stack.appendChild(msg3);
     }
+
+    if (!f.isPass) {
+      var decision = decisions[active];
+      var row = document.createElement('div');
+      row.className = 'decision-row';
+
+      if (decision) {
+        var decidedEl = document.createElement('div');
+        decidedEl.className = 'decided ' + decision;
+        decidedEl.textContent = decision === 'accepted' ? '✓ Fix accepted' : '✕ Fix rejected';
+        row.appendChild(decidedEl);
+      } else {
+        var acceptBtn = document.createElement('button');
+        acceptBtn.type = 'button';
+        acceptBtn.className = 'btn-accept';
+        acceptBtn.textContent = 'Accept fix';
+        acceptBtn.addEventListener('click', function () {
+          decisions[active] = 'accepted';
+          renderChat();
+        });
+
+        var rejectBtn = document.createElement('button');
+        rejectBtn.type = 'button';
+        rejectBtn.className = 'btn-reject';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.addEventListener('click', function () {
+          decisions[active] = 'rejected';
+          renderChat();
+        });
+
+        row.appendChild(acceptBtn);
+        row.appendChild(rejectBtn);
+      }
+
+      stack.appendChild(row);
+    }
+
+    document.getElementById('chatThread').scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function selectFinding(idx) {
     active = idx;
     renderDiff();
     updateActiveStyles();
-    scrollChatTo(idx);
+    renderChat();
   }
 
   // Init
   renderDiff();
   updateActiveStyles();
+  renderChat();
 
   // Auto-cycle every 8s
   setInterval(function () {
