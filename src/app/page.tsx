@@ -4,20 +4,34 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import {
-  GitBranch, BarChart3, ShieldCheck, Download,
-  Clock, TrendingDown, Eye,
   Terminal,
-  Zap, DollarSign, Activity, Settings2, TrendingUp,
+  Zap,
   Monitor, Wrench, FileText, Cpu, Code2, Link2,
-  ChevronDown, PlayCircle, X, Maximize2,
+  ChevronDown, ChevronRight, PlayCircle, X, Maximize2,
+  TrendingUp, Search, ShieldCheck, DollarSign, Package, Settings2,
+  KeyRound, AlertTriangle,
 } from 'lucide-react';
 import HeroParticles from '@/components/HeroParticles';
-import PreReleaseBanner from '@/components/PreReleaseBanner';
 import IdeWindow from '@/components/IdeWindow';
 import Footer from '@/components/Footer';
-import { useGithubDownloads } from '@/hooks/useGithubDownloads';
 
 const githubRepoUrl = 'https://github.com/trustabl';
+const DOCS_URL = 'https://trustabl.github.io/trustabl-docs';
+
+// ── Rules data ──
+const RULE_CATEGORIES = [
+  { category: 'Tool definition',   example: 'Missing tool description causing incorrect LLM selection' },
+  { category: 'Input validation',  example: 'User-controlled parameter passed without validation' },
+  { category: 'Shell safety',      example: 'Shell command built from unsanitized input' },
+  { category: 'Path safety',       example: 'Path traversal vulnerability in file tool' },
+  { category: 'Network',           example: 'HTTP request without timeout or SSRF protection' },
+  { category: 'Retry logic',       example: "Duplicate execution because retries aren't idempotent" },
+  { category: 'Error handling',    example: 'Exception swallowed, agent silently fails' },
+  { category: 'Observability',     example: 'Missing traces, logs, or token cost reporting' },
+  { category: 'Guardrails',        example: 'Dangerous tool callable without approval' },
+  { category: 'Repository hygiene', example: 'SDK version drift, missing configuration, stale metadata' },
+  { category: 'Specialized',       example: 'Framework-specific issues across Claude SDK, OpenAI Agents SDK, Google ADK, MCP, Skills, OpenShell' },
+];
 
 /* ── Score ring (card #3) ── */
 function ScoreRing({ tick }: { tick: number }) {
@@ -68,211 +82,9 @@ function ScoreRing({ tick }: { tick: number }) {
   );
 }
 
-/* ── Flow purification animation ── */
-const FLOW_PILLS = [
-  'retry logic',    'observability',    'validation',      'guardrails',
-  'tracing',        'schema check',     'tool hardening',  'runtime safety',
-  'type safety',    'error handling',   'rate limiting',   'input sanitizing',
-  'timeout config', 'fallback logic',   'audit logging',   'policy check',
-];
-
-// Icons deliberately different from value-prop cards (ShieldCheck/Clock/TrendingDown/Eye)
-const FLOW_ICON_DATA: { paths: string[]; circles: {cx:number;cy:number;r:number}[]; filled?: {cx:number;cy:number;r:number}[] }[] = [
-  // GitBranch — versioning / connect
-  { paths: ['M6 3v12', 'M6 15a9 9 0 009-9'], circles: [{ cx: 18, cy: 9, r: 3 }, { cx: 6, cy: 21, r: 3 }] },
-  // RefreshCw — retry logic
-  { paths: ['M23 4v6h-6', 'M1 20v-6h6', 'M3.51 9a9 9 0 0114.85-3.36L23 10', 'M1 14l4.64 4.36A9 9 0 0020.49 15'], circles: [] },
-  // AlertTriangle — warnings
-  { paths: ['M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z', 'M12 9v4'], circles: [], filled: [{ cx: 12, cy: 17, r: 1 }] },
-  // Lock — guardrails / security
-  { paths: ['M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z', 'M7 11V7a5 5 0 0110 0v4'], circles: [] },
-  // Search — inspection
-  { paths: ['M21 21l-4.35-4.35'], circles: [{ cx: 11, cy: 11, r: 8 }] },
-  // Activity — monitoring
-  { paths: ['M22 12L18 12L15 21L9 3L6 12L2 12'], circles: [] },
-  // Zap — performance
-  { paths: ['M13 2L3 14L12 14L11 22L21 10L12 10Z'], circles: [] },
-  // Code2 — code quality
-  { paths: ['M10 20l4-16', 'M17 8l4 4-4 4', 'M7 8L3 12l4 4'], circles: [] },
-];
-
-function FlowPurification() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    let W = 0, H = 0, cx = 0, cy = 0;
-
-    type P = { x: number; y: number; vx: number; vy: number; label: string; icon: boolean; iconIdx: number; age: number; life: number };
-
-    // Build icon draw functions from Path2D
-    const iconDrawers = FLOW_ICON_DATA.map(({ paths, circles, filled }) =>
-      (c: CanvasRenderingContext2D) => {
-        paths.forEach(d => c.stroke(new Path2D(d)));
-        circles.forEach(({ cx, cy, r }) => {
-          c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.stroke();
-        });
-        filled?.forEach(({ cx, cy, r }) => {
-          c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.fill();
-        });
-      }
-    );
-
-    // Round-robin cursors — guarantees no two visible particles share same content
-    let pillCursor = 0;
-    let iconCursor = 0;
-
-    function spawn(ageOffset = 0): P {
-      const fromLeft = Math.random() < 0.5;
-      const x = fromLeft ? -18 : W + 18;
-      const y = Math.random() * H;
-
-      const speed = 0.50 + Math.random() * 0.30;
-      const angle = Math.atan2(cy - y, cx - x) + (Math.random() - 0.5) * 0.22;
-      const life  = Math.ceil(Math.hypot(cx - x, cy - y) / speed);
-      const isIcon = Math.random() < 0.45;
-      const label = isIcon ? '' : FLOW_PILLS[pillCursor++ % FLOW_PILLS.length];
-      const iconIdx = iconCursor++ % FLOW_ICON_DATA.length;
-
-      const p: P = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-                     label, icon: isIcon, iconIdx, age: 0, life };
-      if (ageOffset > 0) {
-        const steps = Math.min(ageOffset, Math.floor(life * 0.8));
-        p.x += p.vx * steps; p.y += p.vy * steps; p.age = steps;
-      }
-      return p;
-    }
-
-    // Shared neutral palette
-    const BG   = 'rgba(255,255,255,0.05)';
-    const BORD = 'rgba(255,255,255,0.14)';
-    const TXT  = 'rgba(190,192,200,0.80)';
-
-    function drawParticle(p: P, alpha: number) {
-      ctx!.save();
-      ctx!.globalAlpha = alpha;
-
-      if (p.icon) {
-        // Circle with Lucide icon inside
-        const r = 16;
-        ctx!.beginPath();
-        ctx!.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx!.fillStyle = BG; ctx!.fill();
-        ctx!.strokeStyle = BORD; ctx!.lineWidth = 1; ctx!.stroke();
-        // Draw Lucide icon via Path2D, scaled+centered
-        ctx!.save();
-        ctx!.translate(p.x, p.y);
-        ctx!.scale(0.75, 0.75);
-        ctx!.translate(-12, -12);
-        ctx!.strokeStyle = 'rgba(175,180,198,0.75)';
-        ctx!.fillStyle   = 'rgba(175,180,198,0.75)';
-        ctx!.lineWidth = 1.8 / 0.75;
-        ctx!.lineCap = 'round';
-        ctx!.lineJoin = 'round';
-        iconDrawers[p.iconIdx]?.(ctx!);
-        ctx!.restore();
-      } else {
-        // Pill badge
-        ctx!.font = '500 14px -apple-system,BlinkMacSystemFont,sans-serif';
-        const tw = ctx!.measureText(p.label).width;
-        const pw = tw + 16, ph = 20, brad = 10;
-        const px = p.x - pw / 2, py = p.y - ph / 2;
-        ctx!.beginPath();
-        ctx!.moveTo(px + brad, py);
-        ctx!.lineTo(px + pw - brad, py);
-        ctx!.quadraticCurveTo(px + pw, py, px + pw, py + brad);
-        ctx!.lineTo(px + pw, py + ph - brad);
-        ctx!.quadraticCurveTo(px + pw, py + ph, px + pw - brad, py + ph);
-        ctx!.lineTo(px + brad, py + ph);
-        ctx!.quadraticCurveTo(px, py + ph, px, py + ph - brad);
-        ctx!.lineTo(px, py + brad);
-        ctx!.quadraticCurveTo(px, py, px + brad, py);
-        ctx!.closePath();
-        ctx!.fillStyle = BG; ctx!.fill();
-        ctx!.strokeStyle = BORD; ctx!.lineWidth = 1; ctx!.stroke();
-        ctx!.fillStyle = TXT; ctx!.textAlign = 'center'; ctx!.textBaseline = 'middle';
-        ctx!.fillText(p.label, p.x, p.y + 0.5);
-      }
-      ctx!.restore();
-    }
-
-    const N = 10;
-    const pts: P[] = Array.from({ length: N }, (_, i) => spawn(Math.floor((i / N) * 340)));
-    let raf = 0;
-
-    function draw() {
-      ctx!.clearRect(0, 0, W, H);
-      for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
-        p.age++; p.x += p.vx; p.y += p.vy;
-        const dist = Math.hypot(cx - p.x, cy - p.y);
-        if (dist < 26 || p.age >= p.life) { pts[i] = spawn(0); continue; }
-        const t = p.age / p.life;
-        const alpha = t < 0.1 ? t / 0.1 : t > 0.8 ? (1 - t) / 0.2 : 1;
-        drawParticle(p, alpha);
-      }
-      raf = requestAnimationFrame(draw);
-    }
-
-    function resize() {
-      W = canvas!.offsetWidth; H = canvas!.offsetHeight;
-      canvas!.width = W * dpr; canvas!.height = H * dpr;
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cx = W / 2; cy = H / 2;
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-    draw();
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
-  }, []);
-
-  return (
-    <div
-      className="relative h-full min-h-[368px] w-full overflow-hidden rounded-3xl border border-white/8 bg-[#080809]"
-      style={{
-        backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)',
-        backgroundSize: '28px 28px',
-      }}
-    >
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full pointer-events-none" />
-
-      {/* Core — DOM overlay so it stays crisp */}
-      <div className="absolute" style={{ left: '50%', top: '50%', zIndex: 2 }}>
-        {[0, 0.75, 1.5].map(d => (
-          <div key={d} className="absolute rounded-[18px] border border-[#2DD4BF]/15"
-            style={{ width: 60, height: 60, top: -30, left: -30,
-              animation: `coreRing 2.2s ease-out ${d}s infinite` }} />
-        ))}
-        <div className="relative flex items-center justify-center rounded-[18px] bg-[#0B0B0D]"
-          style={{ width: 60, height: 60, marginTop: -30, marginLeft: -30,
-            border: '1px solid rgba(45,212,191,0.30)',
-            animation: 'coreGlow 2s ease-in-out infinite' }}>
-          <svg className="h-6 w-6" viewBox="0 0 612 633" fill="#2DD4BF" xmlns="http://www.w3.org/2000/svg">
-            <path d="M150.066 523.027C150.066 523.027 266.828 630.601 300.296 632.297C333.764 633.992 552.581 495.592 581.992 243.134C581.992 243.134 470.79 353.155 468.772 357.964C466.754 362.772 394.924 505.231 298.514 544.173L150.066 523.027Z"/>
-            <path d="M206.247 374.515L300.403 460.278L605.928 152.563C605.928 152.563 615.353 137.987 609.9 122.144C604.447 106.301 581.133 92.3682 581.133 92.3682C581.133 92.3682 563.895 88.6973 548.932 98.9588C533.969 109.22 298.407 349.012 298.407 349.012L206.226 374.537L206.247 374.515Z"/>
-            <path d="M393.896 3.21383C393.896 3.21383 181.819 -13.3805 133.496 28.846C133.496 28.846 101.38 53.1901 94.6396 120.104C94.6396 120.104 181.969 78.3929 268.419 83.3519C354.868 88.3109 393.918 3.21383 393.918 3.21383H393.896Z"/>
-            <path d="M186.241 8.51621C186.241 8.51621 83.1752 24.0372 13.5991 76.0958C-7.67515 92.0032 -4.69113 181.286 27.5315 209.173C46.058 225.187 206.227 374.515 206.227 374.515C206.227 374.515 246.693 379.581 275.094 368.762L298.408 348.99C298.408 348.99 97.8589 169.308 95.841 145.951C93.823 122.594 109.022 36.703 186.219 8.49475L186.241 8.51621Z"/>
-            <path d="M341.599 209.345V117.764C341.599 117.764 351.238 81.4414 387.389 86.336C423.54 91.2306 452.951 101.707 470.533 92.583C488.115 83.4593 497.732 59.8881 479.742 28.4597C461.752 -2.96868 366.179 -0.693158 344.647 11.9941C323.116 24.6814 270.37 50.2706 262.771 104.519V231.928C262.771 231.928 278.571 266.405 300.875 264.044C323.18 261.682 332.475 256.788 341.256 235.814L341.599 209.366V209.345Z"/>
-            <path d="M298.516 544.173C298.516 544.173 181.067 467.126 143.22 375.696C143.22 375.696 122.44 329.391 82.5531 353.735C82.5531 353.735 48.4198 371.317 67.0107 404.098C85.6015 436.878 125.896 502.118 150.863 523.736C150.863 523.736 214.363 578.821 298.516 544.173Z"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scanTick, setScanTick] = useState(0);
-  const [copied, setCopied] = useState(false);
-  const downloadCount = useGithubDownloads();
   const [atmModal, setAtmModal] = useState<string | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -282,11 +94,6 @@ export default function Home() {
   const handleDemoFullscreen = () => {
     demoVideoRef.current?.requestFullscreen?.();
   };
-  function copyLink() {
-    navigator.clipboard.writeText('https://trustabl.ai');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
   useEffect(() => {
     const iv = setInterval(() => setScanTick(t => t + 1), 7000);
     return () => clearInterval(iv);
@@ -443,128 +250,6 @@ export default function Home() {
       ),
     },
   ];
-
-  const valueProps = [
-    {
-      title: 'Dramatically fewer runtime failures',
-      desc: 'Catch invalid parameters, retry mistakes, and silent breaks before they reach production.',
-    },
-    {
-      title: 'Much less debugging time',
-      desc: 'See prioritized findings and fix the risky parts without digging through every tool path manually.',
-    },
-    {
-      title: 'Lower token waste',
-      desc: 'Reduce bad calls, failed loops, and repeated retries that quietly burn budget.',
-    },
-    {
-      title: 'Clear visibility',
-      desc: 'Understand what your tools are doing instead of guessing from sparse logs.',
-    },
-  ];
-
-  const steps = [
-    {
-      n: '01',
-      title: 'Enable GitHub Action',
-      desc: 'Add Trustabl to your GitHub Actions. Scans run automatically on every pull request.',
-      icon: <GitBranch className="h-5 w-5" />,
-    },
-    {
-      n: '02',
-      title: 'Detect Production Gaps',
-      desc: 'Trustabl scans your AI agents and identifies missing error handling, retries, validation, and guardrails.',
-      icon: <BarChart3 className="h-5 w-5" />,
-    },
-    {
-      n: '03',
-      title: 'Get Fixes in Your IDE',
-      desc: 'Trustabl applies industry best practices and predefined rules. Suggested fixes appear in Cursor or Claude Code for your review.',
-      icon: <ShieldCheck className="h-5 w-5" />,
-    },
-    {
-      n: '04',
-      title: 'Merge & Deploy',
-      desc: 'Approve fixes in your IDE, commit to GitHub, and deploy production-ready agents.',
-      icon: <Download className="h-5 w-5" />,
-    },
-  ];
-
-  const problemBullets = [
-    {
-      title: 'Hallucinated or wrong tool calls',
-      desc: 'A tool can look correct in a demo and still route the wrong action, wrong arguments, or wrong side effect once real prompts hit production.',
-    },
-    {
-      title: 'Missing validation and retry logic',
-      desc: '',
-    },
-    {
-      title: 'No visibility into what is actually happening',
-      desc: '',
-    },
-    {
-      title: 'High token waste from loops and failures',
-      desc: 'Bad retries, repeated loops, and noisy fallback logic burn budget fast without improving outcomes.',
-    },
-  ];
-
-  const beforeBullets = [
-    'No retry logic leads to duplicate side effects',
-    'Missing validation leads to invalid tool calls',
-    'No observability makes debugging painful',
-  ];
-
-  const afterBullets = [
-    'Retry safety and validation are added automatically',
-    'Applicability constraints and observability hooks are generated',
-    'Clear workflow guidance is surfaced for the team',
-  ];
-
-  const trustHighlights = [
-    'OpenShell as our reference deployment platform',
-    '1-click hardened and sandboxed export',
-    'Pre-flight compatibility checks against OpenShell policies',
-    'Policy-aware recommendations for routing and constraints',
-    'Future bidirectional policy sync',
-  ];
-
-  const roadmapItems = [
-    {
-      id: 'now',
-      date: 'Now',
-      dateCls: 'text-[#2DD4BF]',
-      dotCls: 'bg-[#2DD4BF] shadow-[0_0_12px_rgba(45,212,191,0.5)]',
-      title: 'Trustabl Agent Analyzer',
-      badge: 'OPEN SOURCE',
-      badgeCls: 'bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/25',
-      desc: 'Static analysis, rule-based detection, scoring, SARIF/JSON/human output, GitHub Action ready. Available today on GitHub.',
-      active: true,
-    },
-    {
-      id: 'next',
-      date: 'Jun 2026',
-      dateCls: 'text-amber-400',
-      dotCls: 'bg-amber-400/40 border border-amber-400/60',
-      title: 'Auto-Fix + OpenShell Features',
-      badge: 'COMING SOON',
-      badgeCls: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
-      desc: 'Automated remediation via VS Code/Cursor extension and Skill.md — auto-fix safe issues, review higher-risk changes before committing. Full OpenShell risk surface analysis & hardening.',
-      active: false,
-    },
-    {
-      id: 'later',
-      date: 'Q3 2026',
-      dateCls: 'text-gray-500',
-      dotCls: 'bg-white/10 border border-white/15',
-      title: 'Auto-Enrich',
-      badge: null,
-      badgeCls: '',
-      desc: 'LLM-powered enrichment of findings with deeper context, examples, and custom policy alignment.',
-      active: false,
-    },
-  ];
-
 
   const atmComponents = [
     {
@@ -741,244 +426,6 @@ export default function Home() {
     },
   ];
 
-  const renderStepVisual = (stepNumber: string) => {
-    switch (stepNumber) {
-      case '01':
-        return (
-          <div className="flex h-36 items-center justify-center gap-0 overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C]">
-            {/* Left node — Trustabl */}
-            <div className="z-10 flex flex-shrink-0 items-center gap-2 rounded-[14px] border border-white/10 bg-white/[0.04] pl-3 pr-5 py-3">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#2DD4BF]/10">
-                <svg className="h-4 w-4" viewBox="0 0 612 633" fill="#2DD4BF">
-                  <path d="M150.066 523.027C150.066 523.027 266.828 630.601 300.296 632.297C333.764 633.992 552.581 495.592 581.992 243.134C581.992 243.134 470.79 353.155 468.772 357.964C466.754 362.772 394.924 505.231 298.514 544.173L150.066 523.027Z"/>
-                  <path d="M206.247 374.515L300.403 460.278L605.928 152.563C605.928 152.563 615.353 137.987 609.9 122.144C604.447 106.301 581.133 92.3682 581.133 92.3682C581.133 92.3682 563.895 88.6973 548.932 98.9588C533.969 109.22 298.407 349.012 298.407 349.012L206.226 374.537L206.247 374.515Z"/>
-                  <path d="M393.896 3.21383C393.896 3.21383 181.819 -13.3805 133.496 28.846C133.496 28.846 101.38 53.1901 94.6396 120.104C94.6396 120.104 181.969 78.3929 268.419 83.3519C354.868 88.3109 393.918 3.21383 393.918 3.21383H393.896Z"/>
-                  <path d="M186.241 8.51621C186.241 8.51621 83.1752 24.0372 13.5991 76.0958C-7.67515 92.0032 -4.69113 181.286 27.5315 209.173C46.058 225.187 206.227 374.515 206.227 374.515C206.227 374.515 246.693 379.581 275.094 368.762L298.408 348.99C298.408 348.99 97.8589 169.308 95.841 145.951C93.823 122.594 109.022 36.703 186.219 8.49475L186.241 8.51621Z"/>
-                  <path d="M341.599 209.345V117.764C341.599 117.764 351.238 81.4414 387.389 86.336C423.54 91.2306 452.951 101.707 470.533 92.583C488.115 83.4593 497.732 59.8881 479.742 28.4597C461.752 -2.96868 366.179 -0.693158 344.647 11.9941C323.116 24.6814 270.37 50.2706 262.771 104.519V231.928C262.771 231.928 278.571 266.405 300.875 264.044C323.18 261.682 332.475 256.788 341.256 235.814L341.599 209.366V209.345Z"/>
-                  <path d="M298.516 544.173C298.516 544.173 181.067 467.126 143.22 375.696C143.22 375.696 122.44 329.391 82.5531 353.735C82.5531 353.735 48.4198 371.317 67.0107 404.098C85.6015 436.878 125.896 502.118 150.863 523.736C150.863 523.736 214.363 578.821 298.516 544.173Z"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold leading-none text-white">Trustabl</p>
-                <p className="mt-1 text-[10px] leading-none text-gray-500">AI Hardening</p>
-              </div>
-            </div>
-
-            {/* Curved connector — 160px fixed width, trail via staggered dots */}
-            <div className="relative h-full w-40 flex-shrink-0">
-              <svg width="160" height="144" viewBox="0 0 160 144" className="absolute inset-0">
-                {/* Track */}
-                <path
-                  d="M0,72 C40,108 120,36 160,72"
-                  stroke="rgba(255,255,255,0.07)"
-                  strokeWidth="1.2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                {/* End anchors */}
-                <circle cx="0"   cy="72" r="2.5" fill="rgba(255,255,255,0.16)" />
-                <circle cx="160" cy="72" r="2.5" fill="rgba(255,255,255,0.16)" />
-
-                {/* Solid comet trail — 8 tightly-spaced dots behind main (positive begin = behind) */}
-                {[
-                  { begin: '0.35s', r: 0.8,  op: 0.04 },
-                  { begin: '0.28s', r: 1.2,  op: 0.09 },
-                  { begin: '0.22s', r: 1.6,  op: 0.17 },
-                  { begin: '0.16s', r: 2.0,  op: 0.28 },
-                  { begin: '0.11s', r: 2.3,  op: 0.42 },
-                  { begin: '0.07s', r: 2.6,  op: 0.58 },
-                  { begin: '0.03s', r: 2.8,  op: 0.75 },
-                ].map(({ begin, r, op }, i) => (
-                  <circle key={i} r={r} fill="#2DD4BF" opacity={op}>
-                    <animateMotion dur="3.2s" begin={begin} repeatCount="indefinite"
-                      calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"
-                      path="M0,72 C40,108 120,36 160,72" />
-                  </circle>
-                ))}
-                {/* Glow halo */}
-                <circle r="6" fill="rgba(45,212,191,0.16)">
-                  <animateMotion dur="3.2s" begin="0s" repeatCount="indefinite"
-                    calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"
-                    path="M0,72 C40,108 120,36 160,72" />
-                </circle>
-                {/* Main dot */}
-                <circle r="3" fill="#2DD4BF">
-                  <animateMotion dur="3.2s" begin="0s" repeatCount="indefinite"
-                    calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"
-                    path="M0,72 C40,108 120,36 160,72" />
-                </circle>
-              </svg>
-            </div>
-
-            {/* Right node — GitHub */}
-            <div className="z-10 flex flex-shrink-0 items-center gap-2 rounded-[14px] border border-white/10 bg-white/[0.04] pl-3 pr-5 py-3">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-white/5">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="rgb(209,213,219)">
-                  <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold leading-none text-white">GitHub</p>
-                <p className="mt-1 text-[10px] leading-none text-gray-500">Repository</p>
-              </div>
-            </div>
-          </div>
-        );
-      case '02': {
-        const scanFiles = [
-          { name: 'agent.ts', result: '3 gaps', resultCls: 'text-red-400', dotCls: 'bg-red-400', enterDelay: '0.15s', resultDelay: '0.75s' },
-          { name: 'tools/search.ts', result: '1 gap', resultCls: 'text-yellow-400', dotCls: 'bg-yellow-400', enterDelay: '0.55s', resultDelay: '1.15s' },
-          { name: 'tools/deploy.ts', result: '2 gaps', resultCls: 'text-red-400', dotCls: 'bg-red-400', enterDelay: '0.95s', resultDelay: '1.55s' },
-          { name: 'skills/summarize.ts', result: 'clean', resultCls: 'text-[#2DD4BF]', dotCls: 'bg-[#2DD4BF]', enterDelay: '1.35s', resultDelay: '1.95s' },
-        ];
-        return (
-          <div key={scanTick} className="flex h-44 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-5 py-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" style={{ animation: 'scanPulse 1s ease-in-out infinite' }} />
-                <span className="text-[10px] font-medium uppercase tracking-widest text-[#2DD4BF]">Scanning</span>
-              </div>
-              <span className="font-mono text-[10px] text-gray-600 opacity-0" style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '2.2s' }}>4 files · 6 gaps</span>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              {scanFiles.map((f) => (
-                <div key={f.name} className="flex items-center gap-2.5 opacity-0" style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: f.enterDelay }}>
-                  <div className={`h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-600`} style={{ animation: `dotColor 0.3s ease forwards ${f.resultDelay}` }} data-color={f.dotCls} />
-                  <span className="flex-1 truncate font-mono text-[11px] text-gray-400">{f.name}</span>
-                  <span className="relative w-14 text-right">
-                    <span className="absolute inset-0 flex items-center justify-end gap-0.5 text-[10px] text-gray-600" style={{ animation: `fadeOut 0.2s ease forwards`, animationDelay: f.resultDelay }}>
-                      <span style={{ animation: 'blink 0.6s step-end infinite' }}>·</span>
-                      <span style={{ animation: 'blink 0.6s step-end infinite 0.2s' }}>·</span>
-                      <span style={{ animation: 'blink 0.6s step-end infinite 0.4s' }}>·</span>
-                    </span>
-                    <span className={`text-[10px] font-semibold opacity-0 ${f.resultCls}`} style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: f.resultDelay }}>{f.result}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
-      case '03':
-        return (
-          <div key={scanTick} className="flex h-44 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-5 py-4">
-            {/* IDE title bar */}
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-red-500/60" />
-                  <div className="h-2 w-2 rounded-full bg-yellow-500/60" />
-                  <div className="h-2 w-2 rounded-full bg-green-500/60" />
-                </div>
-                <span className="text-[10px] text-gray-500">agent.ts</span>
-              </div>
-              <span className="text-[9px] font-medium uppercase tracking-widest text-[#2DD4BF] opacity-0" style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '0.2s' }}>
-                Trustabl Fix
-              </span>
-            </div>
-            {/* Code diff */}
-            <div className="flex-1 font-mono text-[11px] leading-relaxed">
-              {/* Existing line — static context */}
-              <div className="flex items-center gap-2 text-gray-600">
-                <span className="w-4 text-right">11</span>
-                <span className="px-1.5 text-gray-500">{'// fetch data'}</span>
-              </div>
-              {/* Removed line — strikethrough fade */}
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '0.5s' }}
-              >
-                <span className="w-4 text-right text-gray-600">12</span>
-                <span className="rounded bg-red-500/10 px-1.5 text-red-400 line-through decoration-red-500/40"><span className="mr-1 text-red-500/60">−</span>const res = await fetch(url);</span>
-              </div>
-              {/* Inserted lines — typed in feel */}
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.1s' }}
-              >
-                <span className="w-4 text-right text-gray-600">12</span>
-                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>const res = await retry(</span>
-              </div>
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.4s' }}
-              >
-                <span className="w-4 text-right text-gray-600">13</span>
-                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>&nbsp;&nbsp;() =&gt; fetch(url), {'{ retries: 3 }'}</span>
-              </div>
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.35s ease forwards', animationDelay: '1.65s' }}
-              >
-                <span className="w-4 text-right text-gray-600">14</span>
-                <span className="rounded bg-[#2DD4BF]/10 px-1.5 text-[#2DD4BF]"><span className="mr-1 text-[#2DD4BF]/60">+</span>);</span>
-              </div>
-            </div>
-            {/* Accept bar */}
-            <div
-              className="mt-2 flex items-center justify-end gap-2 border-t border-white/5 pt-2 opacity-0"
-              style={{ animation: 'fadeSlideIn 0.3s ease forwards', animationDelay: '2.1s' }}
-            >
-              <span className="rounded bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-gray-500">Dismiss</span>
-              <span className="rounded bg-[#2DD4BF]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#2DD4BF]">Accept Fix</span>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div key={scanTick} className="flex h-44 items-center justify-center gap-5 overflow-hidden rounded-2xl border border-white/8 bg-[#0A0A0C] px-6 py-4">
-            {/* Merge icon */}
-            <div
-              className="relative flex-shrink-0 opacity-0"
-              style={{ animation: 'scaleFadeIn 0.5s ease forwards', animationDelay: '0.2s' }}
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/5">
-                <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="18" cy="18" r="3" />
-                  <circle cx="6" cy="6" r="3" />
-                  <path d="M6 21V9a9 9 0 0 0 9 9" />
-                </svg>
-              </div>
-              <div
-                className="absolute -inset-2 rounded-3xl border border-[#2DD4BF]/10"
-                style={{ animation: 'mergeGlow 2s ease-in-out infinite', animationDelay: '0.8s' }}
-              />
-            </div>
-            {/* Status text */}
-            <div className="flex flex-col gap-2.5">
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '0.6s' }}
-              >
-                <span className="text-sm font-semibold text-white">Merged to main</span>
-                <span className="text-sm font-bold text-[#2DD4BF]">✓</span>
-              </div>
-              <div
-                className="flex items-center gap-2 opacity-0"
-                style={{ animation: 'fadeSlideIn 0.4s ease forwards', animationDelay: '1.3s' }}
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF] shadow-[0_0_6px_rgba(45,212,191,0.6)]" />
-                <span className="text-xs font-medium text-[#2DD4BF]">Deployed to production</span>
-              </div>
-            </div>
-          </div>
-        );
-    }
-  };
-
-  const renderValuePropIcon = (index: number) => {
-    const cls = 'h-4 w-4';
-    switch (index) {
-      case 0:
-        return <ShieldCheck className={cls} />;
-      case 1:
-        return <Clock className={cls} />;
-      case 2:
-        return <TrendingDown className={cls} />;
-      default:
-        return <Eye className={cls} />;
-    }
-  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#050506] text-white">
@@ -1013,12 +460,6 @@ export default function Home() {
                 <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
               <span>GitHub</span>
-              {downloadCount !== null && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-400/15 px-2 py-0.5 text-[12px] font-semibold text-emerald-400">
-                  <svg className="h-3 w-3 fill-emerald-400" viewBox="0 0 24 24"><path d="M4.75 17.25a.75.75 0 0 1 .75.75v2.25h13v-2.25a.75.75 0 0 1 1.5 0V21a.75.75 0 0 1-.75.75H4.75A.75.75 0 0 1 4 21v-3a.75.75 0 0 1 .75-.75zm7.25-15a.75.75 0 0 1 .75.75v10.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0l-5-5a.75.75 0 0 1 1.06-1.06l3.72 3.72V3a.75.75 0 0 1 .75-.75z"/></svg>
-                  {downloadCount >= 1000 ? `${(downloadCount / 1000).toFixed(1)}k` : downloadCount}
-                </span>
-              )}
             </a>
               <a
               href={githubRepoUrl}
@@ -1053,8 +494,6 @@ export default function Home() {
       </nav>
 
       <main className="page-transition pt-16">
-        <PreReleaseBanner />
-
         <section className="relative overflow-hidden bg-[#050506] py-24 md:py-28">
           <div className="absolute inset-0 pointer-events-none">
             <HeroParticles />
@@ -1062,23 +501,44 @@ export default function Home() {
 
           <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex flex-col items-center text-center">
+              <a
+                href="https://arxiv.org/abs/2406.12045"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Even state-of-the-art function calling agents succeed on <50% of the tasks."
+                className="mb-5 inline-flex items-center rounded-full border border-red-500/25 bg-red-500/10 px-4 py-1.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
+              >
+                Agents Fail Over 50% of Tasks
+                <ChevronRight className="ml-1 h-3.5 w-3.5" />
+              </a>
               <h1 className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight lg:text-6xl">
-                Better context.{' '}
-                <span className="text-[#2DD4BF]">Better agents.</span>
+                Make your agents{' '}
+                <span className="text-[#2DD4BF]">reliable</span>
               </h1>
             </div>
 
             <div className="mt-6 flex flex-col items-center">
-              <p className="max-w-3xl text-center text-sm leading-relaxed text-gray-400 sm:text-base">
-                Trustabl scans your agents, tools, skills, and artifacts — surfaces what&apos;s wrong across all four reliability pillars, then puts AI-proposed fixes right in Cursor or Claude Code, fully in your control.
+              <p className="max-w-3xl text-center text-sm leading-relaxed text-gray-500 sm:text-base">
+                It&apos;s usually not the model. It&apos;s the agent&apos;s config, tools, context, and guardrails.{' '}
+                <span className="text-white">Trustabl<br />finds and fixes these reliability issues in your agent repo before they reach production.</span>
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <a
-                  href={`${githubRepoUrl}/trustabl-action`}
+                  href={`${DOCS_URL}/quick-start/`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2DD4BF] px-5 py-3 text-sm font-semibold text-[#08121F] transition-all hover:scale-[1.02] hover:bg-[#22B8A6]"
+                >
+                  <Terminal className="h-4 w-4" />
+                  Scan Your Repository
+                </a>
+
+                <a
+                  href={`${githubRepoUrl}/trustabl-action`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] hover:bg-white/10"
                 >
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -1089,12 +549,16 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setDemoOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] hover:bg-white/10"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-gray-300 transition-all hover:text-white"
                 >
                   <PlayCircle className="h-4 w-4" />
                   Watch Demo
                 </button>
               </div>
+
+              <p className="mt-5 text-center text-xs text-gray-600">
+                Open source <span className="mx-2 text-gray-700">•</span> Runs locally <span className="mx-2 text-gray-700">•</span> Deterministic <span className="mx-2 text-gray-700">•</span> No code leaves your machine
+              </p>
             </div>
 
             <div className="mt-16">
@@ -1125,431 +589,199 @@ export default function Home() {
         </section>
 
         {/* ── BENEFITS ── */}
-        <section className="bg-[#050506] py-28 lg:py-32 border-t border-white/5 reveal">
+        <section className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-14 text-center">
+            <div className="mb-14">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Benefits</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Why Teams Use Trustabl</h2>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Why teams use Trustabl</h2>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-white/8 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                {
-                  icon: <Zap className="h-5 w-5" />,
-                  title: 'Higher Agent Success Rate',
-                  desc: 'Agents complete tasks more reliably by using the right tools at the right time.',
-                },
-                {
-                  icon: <DollarSign className="h-5 w-5" />,
-                  title: 'Lower Token & API Costs',
-                  desc: 'Reduce wasted tokens and expensive retries through smarter tool definitions.',
-                },
-                {
-                  icon: <Activity className="h-5 w-5" />,
-                  title: 'Faster Debugging & Observability',
-                  desc: 'Turn agent behavior from a black box into something you can actually trace and debug.',
-                },
-                {
-                  icon: <Clock className="h-5 w-5" />,
-                  title: 'Less Manual Hardening Work',
-                  desc: 'Automatically generate production-grade metadata that would otherwise take hours or days to create manually.',
-                },
-                {
-                  icon: <ShieldCheck className="h-5 w-5" />,
-                  title: 'Stronger Security & Compliance',
-                  desc: 'Get least-privilege policies, audit trails, and supply chain attestations by default.',
-                },
-                {
-                  icon: <Settings2 className="h-5 w-5" />,
-                  title: 'Future-Proof Integrations',
-                  desc: 'Works seamlessly with modern agent frameworks and runtimes out of the box.',
-                },
-                {
-                  icon: <TrendingUp className="h-5 w-5" />,
-                  title: 'Continuous Improvement',
-                  desc: 'Agents get better over time using real runtime feedback.',
-                },
-              ].map((card) => (
-                <div key={card.title} className="flex flex-col gap-4 rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition-colors hover:border-[#2DD4BF]/30">
-                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
+                { icon: <TrendingUp className="h-4 w-4 text-[#2DD4BF]" />, title: 'Higher agent success rate',      desc: 'Increase your reliability score, reduce failure.' },
+                { icon: <Wrench className="h-4 w-4 text-[#2DD4BF]" />,     title: 'Automates issue remediation',    desc: 'IDE integration enables inline suggested fixes.' },
+                { icon: <Search className="h-4 w-4 text-[#2DD4BF]" />,     title: 'Reduced debugging work',         desc: 'Solve issues before they become problems.' },
+                { icon: <ShieldCheck className="h-4 w-4 text-[#2DD4BF]" />,title: 'Better compliance and security', desc: 'Maps to compliance frameworks, hardens agents.' },
+                { icon: <DollarSign className="h-4 w-4 text-[#2DD4BF]" />, title: 'Lowers token costs',             desc: 'Better tool calling, limits failed retries.' },
+                { icon: <FileText className="h-4 w-4 text-[#2DD4BF]" />,   title: 'Generates policies',             desc: 'For OpenShell, Microsoft ACS, and more.' },
+                { icon: <Package className="h-4 w-4 text-[#2DD4BF]" />,    title: 'Supply chain visibility',        desc: 'Total visibility with CycloneDX and VEX.' },
+                { icon: <Settings2 className="h-4 w-4 text-[#2DD4BF]" />,  title: 'Less manual hardening',          desc: 'Generates production-grade metadata for you.' },
+              ].map((card, i) => (
+                <div
+                  key={card.title}
+                  className={`bg-white/[0.03] p-6 border-white/8 ${i % 4 !== 3 ? 'border-r' : ''} ${i < 4 ? 'border-b' : ''}`}
+                >
+                  <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-md bg-[#2DD4BF]/10">
                     {card.icon}
                   </div>
                   <h3 className="text-base font-semibold text-white">{card.title}</h3>
-                  <p className="flex-1 text-sm leading-relaxed text-gray-400">{card.desc}</p>
-                  <button className="flex items-center gap-1.5 text-xs font-medium text-[#2DD4BF] transition-colors hover:text-white">
-                    Learn how
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-400">{card.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
 
-              {/* Summary CTA card */}
-              <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.04] p-6 text-center">
-                <h3 className="text-base font-semibold text-white">See everything Trustabl generates</h3>
-                <p className="text-sm text-gray-400">See the complete list of metadata fields Trustabl generates</p>
-                <a href="/products" className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-[#2DD4BF]/30 px-4 py-2 text-xs font-semibold text-[#2DD4BF] transition-colors hover:bg-[#2DD4BF]/10">
-                  View Products
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+        {/* RULE INDEX */}
+        <section className="bg-[#050506] py-20 lg:py-24 reveal">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Static Analysis</p>
+            <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">What Trustabl fixes</h2>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-400">
+              Covers every layer of your agent stack. No LLM required. Fully offline.
+            </p>
+
+            <div className="mt-10 overflow-hidden rounded-3xl border border-white/8">
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/8">
+                      <th className="px-5 py-3 text-left text-[10px] font-medium uppercase tracking-widest text-gray-500 whitespace-nowrap">Category</th>
+                      <th className="px-5 py-3 text-left text-[10px] font-medium uppercase tracking-widest text-gray-500">Example Finding</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {RULE_CATEGORIES.map((rule, i) => (
+                      <tr key={rule.category} className={`border-b border-white/5 transition-colors hover:bg-white/[0.02] ${i === RULE_CATEGORIES.length - 1 ? 'border-b-0' : ''}`}>
+                        <td className="px-5 py-3 text-[13px] font-medium text-[#2DD4BF] whitespace-nowrap">{rule.category}</td>
+                        <td className="px-5 py-3 text-gray-400">{rule.example}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/8 px-5 py-4">
+                <span className="text-xs text-gray-500">187 rules across all categories</span>
+                <a href={`${DOCS_URL}/rules/`} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-[#2DD4BF] transition-colors hover:text-white">
+                  Full index →
                 </a>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="problem" className="bg-[#050506] py-28 lg:py-32 reveal">
+        {/* COVERAGE */}
+        <section className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="max-w-3xl">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">The problem</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Your agents work in demos. They break in production.</h2>
-              <p className="mt-5 text-lg leading-relaxed text-gray-400">
-                Most AI tools and skills are built quickly and lack the operational hardening needed for real use.{' '}
-                <span className="font-inherit text-red-400">Result: Most agent projects never make it to production.</span>
-              </p>
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Coverage</p>
+            <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">What Trustabl evaluates</h2>
+
+            {/* What we analyze — surface area grid */}
+            <h3 className="mt-10 text-sm font-semibold uppercase tracking-wider text-gray-500">What we analyze</h3>
+            <div className="mt-5 grid grid-cols-1 overflow-hidden rounded-2xl border border-white/8 sm:grid-cols-3">
+              {[
+                { title: 'Agents',        desc: 'Every declaration, config captured' },
+                { title: 'Sub-agents',    desc: 'Markdown agent definitions' },
+                { title: 'Tools',         desc: 'Custom function tools' },
+                { title: 'Hosted tools',  desc: 'Built-ins: shell, search, computer' },
+                { title: 'Skills',        desc: 'SKILL.md + bundled files' },
+                { title: 'Slash commands',desc: 'Command prompts' },
+                { title: 'MCP servers',   desc: 'Registrations + configs' },
+                { title: 'Guardrails',    desc: 'Input / output' },
+                { title: 'Sessions',      desc: 'Memory + persistence' },
+                { title: 'Handoffs',      desc: 'Agent-to-agent edges' },
+                { title: 'Plugins',       desc: 'Manifests + marketplaces' },
+                { title: 'Permissions',   desc: 'Settings + tool grants' },
+              ].map((item, i) => (
+                <div
+                  key={item.title}
+                  className={`bg-white/[0.03] p-5 border-white/8 ${i % 3 !== 2 ? 'border-r' : ''} ${i < 9 ? 'border-b' : ''}`}
+                >
+                  <h4 className="text-base font-semibold text-[#2DD4BF]">{item.title}</h4>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-400">{item.desc}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="mt-12 grid gap-5 lg:grid-cols-[2.2fr_1fr]">
-              <article className="overflow-hidden rounded-[30px] border border-white/8 bg-white/[0.03] p-5 lg:p-6">
-                <h3 className="text-base font-medium text-white">{problemBullets[0].title}</h3>
-
-                <div className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-                  {/* Intent vs Actual mismatch table */}
-                  <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#0D0D10]">
-                    <div className="p-4">
-                      <div className="mb-3 grid grid-cols-2 gap-2">
-                        <div className="flex min-h-[42px] items-center px-3 py-2.5">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2DD4BF]">Intent</p>
-                        </div>
-                        <div className="flex min-h-[42px] items-center px-3 py-2.5">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-400">Actual</p>
-                        </div>
-                      </div>
-                      {[ 
-                        ['create_invoice()', 'refund_invoice() ✗'],
-                        ['customer_id: 482', 'invoice_id: 7821 ✗'],
-                        ['amount: $150', '— ✗'],
-                      ].map(([intent, actual]) => (
-                        <div key={intent} className="mb-2 grid grid-cols-2 gap-2">
-                          <div className="flex min-h-[42px] items-center rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 font-mono text-xs text-gray-300">{intent}</div>
-                          <div className="flex min-h-[42px] items-center rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 font-mono text-xs text-gray-500">{actual}</div>
-                        </div>
-                      ))}
-                    </div>
+            {/* What we look for — scannable rows */}
+            <h3 className="mt-14 text-sm font-semibold uppercase tracking-wider text-gray-500">What we look for</h3>
+            <div className="mt-5 grid grid-cols-1 overflow-hidden rounded-2xl border border-white/8 md:grid-cols-3">
+              {[
+                {
+                  icon: <ShieldCheck className="h-4 w-4 text-[#2DD4BF]" />,
+                  title: 'Reliability and safety',
+                  desc: 'The headline 187 rules: missing guardrails, over-broad permissions, shell and code execution, SSRF.',
+                },
+                {
+                  icon: <KeyRound className="h-4 w-4 text-[#2DD4BF]" />,
+                  title: 'Secrets',
+                  desc: 'Credentials committed in agent and skill artifacts.',
+                },
+                {
+                  icon: <AlertTriangle className="h-4 w-4 text-[#2DD4BF]" />,
+                  title: 'Known CVEs',
+                  desc: 'Vulnerable dependencies, matched against an OSV snapshot (opt-in).',
+                },
+              ].map((row, i) => (
+                <div key={row.title} className={`bg-white/[0.03] p-6 border-white/8 ${i !== 2 ? 'md:border-r' : ''}`}>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#2DD4BF]/10">
+                    {row.icon}
                   </div>
-
-                  {/* Risk signals — clean row list */}
-                  <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#0D0D10]">
-                    <div className="space-y-2.5 p-5">
-                      {['Wrong tool routed', 'Wrong parameters', 'No applicability check', 'Side effect triggered'].map((item) => (
-                        <div key={item} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                          <span className="text-sm font-bold text-gray-600">!</span>
-                          <span className="text-xs text-gray-400">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <h4 className="mt-3 text-base font-semibold text-white">{row.title}</h4>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-400">{row.desc}</p>
                 </div>
-              </article>
-
-              <article className="rounded-[30px] border border-white/8 bg-white/[0.03] p-5 lg:p-6">
-                <h3 className="text-base font-medium text-white">{problemBullets[1].title}</h3>
-                <div className="mt-5 overflow-hidden rounded-[22px] border border-white/8 bg-[#050506]">
-                  <div className="space-y-2.5 p-5">
-                    {[
-                      { label: 'Schema validation',  present: false },
-                      { label: 'Input validation',   present: false },
-                      { label: 'Retry wrapper',      present: false },
-                      { label: 'Base execution',     present: true  },
-                    ].map(({ label, present }) => (
-                      <div key={label} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                        <div className="flex items-center gap-3">
-                          <span className={`text-sm font-bold ${present ? 'text-gray-600' : 'text-gray-700'}`}>{present ? '✓' : '⊘'}</span>
-                          <span className={`text-xs ${present ? 'text-gray-400' : 'text-gray-600'}`}>{label}</span>
-                        </div>
-                        <span className={`text-[9px] font-medium uppercase tracking-wider ${present ? 'text-gray-600' : 'text-gray-700'}`}>{present ? 'present' : 'missing'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </article>
-              <div className="grid gap-5 lg:col-span-2 lg:grid-cols-[0.78fr_1.22fr]">
-              <article className="rounded-[30px] border border-white/8 bg-white/[0.03] p-5 lg:p-6">
-                <h3 className="text-base font-medium text-white">{problemBullets[2].title}</h3>
-                <div className="mt-5 overflow-hidden rounded-[22px] border border-white/8 bg-[#0D0D10]">
-                  <div className="grid grid-cols-2 gap-2 px-4 pt-4 pb-2">
-                    {[{ label: 'Latency' }, { label: 'Error rate' }].map(({ label }) => (
-                      <div key={label} className="rounded-xl border border-white/8 bg-[#111114] p-3">
-                        <p className="text-[9px] uppercase tracking-[0.18em] text-gray-600">{label}</p>
-                        <p className="mt-2 text-xl font-bold text-gray-700">—</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mx-4 mb-4 rounded-xl border border-white/8 bg-[#111114] p-3">
-                    <p className="text-[9px] uppercase tracking-[0.18em] text-gray-600">Last trace</p>
-                    <p className="mt-2 text-xs text-gray-700">No data available</p>
-                    <div className="mt-3 space-y-1.5">
-                      {[60, 80, 45].map((w, i) => (
-                        <div key={i} className="h-2 rounded-full bg-white/5" style={{ width: `${w}%` }} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </article>
-
-              <article className="overflow-hidden rounded-[30px] border border-white/8 bg-white/[0.03] p-5 lg:p-6">
-                <div className="flex flex-col">
-                  <h3 className="text-base font-medium text-white">{problemBullets[3].title}</h3>
-                </div>
-
-                <div className="mt-5">
-                  <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr] xl:items-stretch">
-                      <div className="space-y-4 rounded-[20px] border border-white/8 bg-[#0D0D10] p-4">
-                        {[
-                          ['Loop retries', '68%'],
-                          ['Invalid calls', '52%'],
-                          ['Context overflow', '44%'],
-                          ['Fallback noise', '31%'],
-                        ].map(([label, value]) => (
-                          <div key={label}>
-                            <div className="mb-2 flex items-center justify-between text-sm">
-                              <span className="text-white/80">{label}</span>
-                              <span className="text-red-300">{value}</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-white/8">
-                              <div className="h-2 rounded-full bg-red-400/40" style={{ width: value }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex h-full rounded-[20px] border border-white/8 bg-[#0D0D10] p-4">
-                        <div className="relative flex h-full min-h-[168px] w-full items-center justify-center overflow-hidden rounded-[16px] bg-[#0D0D10]">
-                          <div className="relative h-[190px] w-[88%] max-w-[360px]">
-                          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            {[
-                              { d: 'M16 23 C24 25, 28 28, 35 37', stroke: 'rgba(248,113,113,0.65)' },
-                              { d: 'M42 38 C50 32, 56 29, 66 25', stroke: 'rgba(248,113,113,0.65)' },
-                              { d: 'M69 30 C74 38, 77 47, 76 61', stroke: 'rgba(248,113,113,0.65)' },
-                              { d: 'M68 65 C60 70, 48 73, 33 72', stroke: 'rgba(250,204,21,0.55)' },
-                              { d: 'M31 68 C22 58, 18 44, 16 23', stroke: 'rgba(250,204,21,0.55)' },
-                            ].map(({ d, stroke }, i) => (
-                              <path
-                                key={i}
-                                d={d}
-                                fill="none"
-                                stroke={stroke}
-                                strokeWidth="1.4"
-                                strokeLinecap="round"
-                                strokeDasharray="3 3"
-                                style={{ animation: `streamDash ${1.6 + i * 0.2}s linear ${i * 0.3}s infinite` }}
-                              />
-                            ))}
-                          </svg>
-                          <div className="absolute left-[23%] top-[13%] -translate-x-1/2 rounded-full border border-red-500/30 bg-[#0D0D10] px-3 py-2 text-xs text-red-200">bad input</div>
-                          <div className="absolute left-[46%] top-[36%] -translate-x-1/2 rounded-full border border-white/10 bg-[#0D0D10] px-3 py-2 text-xs text-gray-200">retry loop</div>
-                          <div className="absolute left-[73%] top-[16%] -translate-x-1/2 whitespace-nowrap rounded-full border border-red-500/30 bg-[#0D0D10] px-3 py-2 text-xs text-red-200">invalid tool</div>
-                          <div className="absolute left-[75%] top-[62%] -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-[#0D0D10] px-3 py-2 text-xs text-gray-200">fallback call</div>
-                          <div className="absolute left-[34%] top-[73%] -translate-x-1/2 rounded-full border border-yellow-500/25 bg-[#0D0D10] px-3 py-2 text-xs text-yellow-200">token drain</div>
-                          </div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-              </article>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section id="how-it-works" className="bg-[#050506] py-28 lg:py-32 reveal">
+        {/* GET STARTED */}
+        <section className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">How it works</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Four steps. Minutes, not days.</h2>
-            </div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Get Started in 2 Minutes</p>
 
-            <div className="mt-10 grid gap-5 md:grid-cols-2">
-              <div className="space-y-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
-                {steps.map((step) => (
-                  <div key={step.n} className="rounded-3xl border border-white/8 bg-[#131317] p-5">
-                    <div className="mb-4">
-                      {renderStepVisual(step.n)}
-                    </div>
-                    <div className="mb-4 flex min-w-0 items-baseline gap-2">
-                      <span className="text-sm font-medium tracking-[0.12em] text-[#2DD4BF]">{step.n}</span>
-                      <span className="text-sm font-medium tracking-[0.06em] text-gray-500">—</span>
-                      <h3 className="min-w-0 truncate text-sm font-medium text-white">{step.title}</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-gray-400">{step.desc}</p>
-                  </div>
-                ))}
+            <div className="flex flex-wrap items-center justify-between gap-6">
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Three steps</h2>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href={`${githubRepoUrl}/trustabl-action`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2DD4BF] px-5 py-3 text-sm font-semibold text-[#08121F] transition-all hover:scale-[1.02] hover:bg-[#22B8A6]"
+                >
+                  Add GitHub Action
+                </a>
+                <a
+                  href={`${DOCS_URL}/quick-start/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] hover:bg-white/10"
+                >
+                  Run CLI scan
+                </a>
               </div>
             </div>
 
-          </div>
-        </section>
-
-        <section className="bg-[#050506] py-28 lg:py-32 reveal" id="outcomes">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="max-w-5xl">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">What you actually get</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                The output is smaller risk, clearer behavior, and less time lost to{' '}
-                <span className="whitespace-nowrap">broken tools.</span>
-              </h2>
-              <p className="mt-5 text-lg leading-relaxed text-gray-400 lg:whitespace-nowrap">
-                Trustabl is built to make AI tools production-ready without slowing your team down or burying them in manual review.
-              </p>
-            </div>
-
-            <div className="mt-12 grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-stretch">
-              <div className="h-full">
-                <FlowPurification />
-              </div>
-
-              <div className="grid h-full gap-4 md:grid-cols-2 md:items-stretch">
-                {valueProps.map((card, index) => (
-                  <div key={card.title} className="flex h-full min-h-[176px] flex-col rounded-3xl border border-white/8 bg-white/[0.03] p-4 transition-colors hover:border-[#2DD4BF]/30">
-                    <div className="space-y-3">
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                        {renderValuePropIcon(index)}
-                      </div>
-                      <h3 className="text-base font-bold leading-snug">{card.title}</h3>
-                      <p className="text-sm leading-snug text-gray-400">{card.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="before-after" className="bg-[#050506] py-28 lg:py-32 reveal">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Before vs after</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                The score changes because the
-                <br />
-                <span className="whitespace-nowrap">system is actually hardened.</span>
-              </h2>
-            </div>
-
-            <div className="mt-14 grid gap-5 lg:grid-cols-2">
-              <div className="rounded-[28px] border border-red-500/20 bg-red-500/5 p-7">
-                <p className="text-xs font-medium uppercase tracking-[0.24em] text-red-400">Before</p>
-                <div className="mt-4 flex items-end gap-3">
-                  <span className="text-4xl font-semibold tracking-[0.02em] text-red-400 lg:text-5xl">38%</span>
-                  <span className="pb-2 text-sm font-medium uppercase tracking-[0.24em] text-red-300">High Risk</span>
-                </div>
-                <ul className="mt-6 space-y-3 text-sm text-gray-300">
-                  {beforeBullets.map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <span className="mt-1.5 h-2 w-2 rounded-full bg-red-400" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-[28px] border border-[#2DD4BF]/20 bg-[#2DD4BF]/6 p-7">
-                <p className="text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">After Trustabl</p>
-                <div className="mt-4 flex items-end gap-3">
-                  <span className="text-4xl font-semibold tracking-[0.02em] text-[#2DD4BF] lg:text-5xl">91%</span>
-                  <span className="pb-2 text-sm font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Production Ready</span>
-                </div>
-                <ul className="mt-6 space-y-3 text-sm text-gray-300">
-                  {afterBullets.map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <span className="mt-1.5 h-2 w-2 rounded-full bg-[#2DD4BF]" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="why-trustabl" className="bg-[#050506] py-28 lg:py-32 reveal">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Why Trustabl?</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Trustabl = Trustworthy + Reliable</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-gray-400">
-                We exist to make the tools and skills that power AI agents worthy of real production environments, not just demos.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section id="openshell" className="bg-[#050506] py-28 lg:py-32 reveal">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="relative overflow-hidden rounded-[32px] border border-[#2DD4BF]/20 bg-white/[0.03] p-8 lg:p-12">
-              <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-                <div className="flex flex-col">
-                  <Image src="/inception-program.png" alt="NVIDIA Inception Program" width={160} height={60} className="w-auto h-12 object-contain self-start" />
-                  <h2 className="mt-5 text-4xl font-semibold leading-tight lg:text-5xl">
-                    Built for production.
-                    <span className="block text-white">
-                      Designed to work with <span className="text-[#2DD4BF]">NVIDIA OpenShell.</span>
-                    </span>
-                  </h2>
-                  <p className="mt-4 max-w-2xl leading-relaxed text-gray-400">
-                    We’re working with NVIDIA to make Trustabl the natural bridge to secure, governed deployment.
-                  </p>
-                </div>
-                <div className="grid gap-3">
-                  {trustHighlights.map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="roadmap" className="bg-[#050506] py-28 lg:py-32 reveal">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-16 text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Roadmap</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">
-                Starting with open source.<br />Growing into a full platform.
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-gray-400">
-                Trustabl Agent Analyzer is the trustworthy foundation. We&apos;re shipping production hardening capabilities throughout 2026.
-              </p>
-            </div>
-            <div className="mx-auto max-w-3xl">
-              {roadmapItems.map((phase, i, arr) => (
-                <div key={phase.id} className="flex gap-6">
-                  <div className="relative hidden w-32 flex-shrink-0 flex-col items-end md:flex">
-                    <div className="flex items-center gap-2 pt-6">
-                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
-                      <div className={`h-3 w-3 flex-shrink-0 rounded-full ${phase.dotCls}`} />
-                    </div>
-                    {i < arr.length - 1 && (
-                      <div className="mr-[5px] w-px flex-1 bg-white/8" />
-                    )}
-                  </div>
-                  <div className={`mb-5 flex-1 rounded-3xl border p-6 transition-colors ${phase.active ? 'border-[#2DD4BF]/20 bg-[#2DD4BF]/[0.04]' : 'border-white/8 bg-white/[0.03]'}`}>
-                    <div className="mb-1 flex flex-wrap items-center gap-2 md:hidden">
-                      <span className={`text-xs font-semibold ${phase.dateCls}`}>{phase.date}</span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-semibold text-white">{phase.title}</h3>
-                      {phase.badge && (
-                        <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${phase.badgeCls}`}>
-                          {phase.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-400">{phase.desc}</p>
+            <div className="mt-12 grid gap-6 sm:grid-cols-3">
+              {[
+                {
+                  title: 'Add the GitHub Action',
+                  desc: "Add Trustabl to your repo's CI pipeline. Scans run automatically on every push.",
+                  code: 'uses: trustabl/scan-action@v1',
+                },
+                {
+                  title: 'Add Trustabl to your dev tool',
+                  desc: 'Install the Trustabl integration for Cursor, Claude Code, or your preferred IDE.',
+                  code: 'ext install trustabl.trustabl-vscode',
+                },
+                {
+                  title: 'See issues and fixes in your IDE',
+                  desc: 'Review findings with explanations and apply suggested fixes directly in your editor.',
+                  code: '✓ 7 fixed · score 91% · PASS',
+                },
+              ].map((step, i) => (
+                <div key={step.title} className="relative flex flex-col rounded-2xl border border-white/8 bg-white/[0.03] p-6">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-[#2DD4BF]/40 bg-[#050506] text-sm font-semibold text-[#2DD4BF]">
+                    {i + 1}
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold text-white">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-400">{step.desc}</p>
+                  <div className="mt-4 rounded-lg border border-white/8 bg-white/[0.03] px-4 py-2.5 font-mono text-xs text-[#2DD4BF]">
+                    {step.code}
                   </div>
                 </div>
               ))}
@@ -1557,34 +789,91 @@ export default function Home() {
           </div>
         </section>
 
+        {/* COMPLEMENTS SECURITY TOOLS */}
+        <section className="bg-[#050506] py-20 lg:py-24 reveal">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Context</p>
+
+            <div className="grid gap-12 lg:grid-cols-2">
+              <div>
+                <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">Trustabl complements your security tools</h2>
+                <p className="mt-5 text-lg leading-relaxed text-gray-400">
+                  Trustabl solves agent <span className="font-semibold text-white">reliability issues</span>, something cybersecurity tools don&apos;t address. Most agents fail not because of security vulnerabilities, but because of missing guardrails, poor tool definitions, and unhandled edge cases.
+                </p>
+                <p className="mt-4 text-lg leading-relaxed text-gray-400">
+                  By hardening your agents, we also make them more secure. We include tooling for vulnerabilities, secrets, SBOMs, and compliance, with dependency license types coming soon. We generate security policies automatically for things like MCPs, NVIDIA OpenShell, and Microsoft ACS.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {[
+                  {
+                    who: 'Trustabl',
+                    lead: 'Reliability',
+                    desc: 'Guardrails, tool definitions, retries, and error handling, checked before code ships.',
+                    highlight: true,
+                  },
+                  {
+                    who: 'CrowdStrike / Snyk',
+                    lead: 'Runtime threat detection',
+                    desc: 'Secures the agent environment after deployment.',
+                    highlight: false,
+                  },
+                  {
+                    who: 'LangSmith / Langfuse',
+                    lead: 'Observability',
+                    desc: 'Trustabl generates the OTEL traces and logs that feed these platforms.',
+                    highlight: false,
+                  },
+                  {
+                    who: 'Together',
+                    lead: 'Defense in depth',
+                    desc: 'Hardened tools, secured runtime, full observability.',
+                    highlight: false,
+                  },
+                ].map((row) => (
+                  <div
+                    key={row.who}
+                    className={`rounded-2xl border p-5 ${row.highlight ? 'border-[#2DD4BF]/30 bg-[#2DD4BF]/[0.06]' : 'border-white/8 bg-white/[0.03]'}`}
+                  >
+                    <h4 className="text-sm font-semibold text-white">{row.who}</h4>
+                    <p className="mt-1.5 text-sm leading-relaxed text-gray-400">
+                      <span className={row.highlight ? 'font-medium text-[#2DD4BF]' : 'font-medium text-gray-300'}>{row.lead}:</span> {row.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* ATM Diagram Section */}
-        <section id="atm" className="bg-[#050506] py-28 lg:py-32 reveal">
+        <section id="atm" className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
-              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Agentic Tool Metadata</p>
-              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">ATM makes every layer of the stack better</h2>
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">Trustabl Agent Analyzer (TAA)</p>
+              <h2 className="text-4xl font-semibold leading-tight lg:text-5xl">TAA makes every layer of the stack better</h2>
               <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-gray-400">
-                Rich, production-grade metadata doesn&apos;t just describe your tools — it makes every system that uses them smarter, safer, and faster.
+                Rich, production-grade metadata doesn&apos;t just describe your tools, it makes every system that uses them smarter, safer, and faster.
               </p>
             </div>
 
             {/* Desktop diagram */}
             <div className="hidden lg:block">
               {(() => {
-                // Layout (px): 3 cards h-[120px], gap-5 (20px) between rows
-                // Total H = 3×120 + 2×20 = 400. Row midpoints: 60, 200, 340.
-                // cardW=340, 20px gap to rail, center channel=180px.
-                // leftRail=360, rightRail=540, cx=450
-                const W = 900, H = 400;
+                // Layout (px): 3 cards h-[168px], gap-5 (20px) between rows
+                // Total H = 3×168 + 2×20 = 544. Row midpoints: 84, 272, 460.
+                // cardW=340, 48px gap to rail, center channel=184px, 52px rail-to-logo.
+                // leftRail=388, rightRail=572, cx=480
+                const W = 960, H = 544;
                 const cardW = 340;
-                const leftRailX = cardW + 20;      // 360
-                const rightRailX = W - cardW - 20; // 540
-                const cx = W / 2;                  // 450
-                const logoSize = 60;
-                const logoX = cx - logoSize / 2;   // 420
-                const logoY = 200 - logoSize / 2;  // 170
-                const rows = [60, 200, 340];
+                const leftRailX = cardW + 48;      // 388
+                const rightRailX = W - cardW - 48; // 572
+                const cx = W / 2;                  // 480
+                const logoSize = 80;
+                const logoX = cx - logoSize / 2;   // 440
+                const logoY = 272 - logoSize / 2;  // 232
+                const rows = [84, 272, 460];
                 const lineColor = 'rgba(45,212,191,0.25)';
                 const dotColor = '#2DD4BF';
 
@@ -1603,16 +892,16 @@ export default function Home() {
                   <div className="mx-auto" style={{ width: W }}>
                     {/* Supply chain — centered within 900px wrapper */}
                     <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">
-                          <Link2 className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0D0D10] px-5 py-4">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-[#2DD4BF]/10 text-[#2DD4BF]">
+                          <Link2 className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">Supply Chain</p>
-                          <p className="text-[11px] text-gray-500">SLSA + Sigstore attestations</p>
+                          <p className="text-base font-semibold text-white">Supply Chain</p>
+                          <p className="text-sm text-gray-400">SLSA + Sigstore attestations</p>
                         </div>
                       </div>
-                      <div className="h-8 w-px bg-[#2DD4BF]/25" />
+                      <div style={{ width: 1, height: 40, backgroundColor: 'rgba(45,212,191,0.25)' }} />
                     </div>
 
                     {/* Diagram area: fixed 900×520, SVG lines + absolutely positioned cards */}
@@ -1650,12 +939,10 @@ export default function Home() {
                       {/* Left cards — width=340, starts at x=0, ends at x=340 (rail at 360) */}
                       <div className="absolute left-0 top-0 flex flex-col gap-5" style={{ width: cardW }}>
                         {leftNodes.map((node) => (
-                          <div key={node.id} className="flex h-[120px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-5 transition-colors hover:border-[#2DD4BF]/30">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
-                              <span className="text-sm font-semibold text-white">{node.title}</span>
-                            </div>
-                            <p className="text-xs leading-relaxed text-gray-400">{node.desc}</p>
+                          <div key={node.id} className="flex h-[168px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-6 transition-colors hover:border-[#2DD4BF]/30">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
+                            <span className="text-base font-semibold text-white">{node.title}</span>
+                            <p className="text-sm leading-relaxed text-gray-400">{node.desc}</p>
                             <button type="button" onClick={() => setAtmModal(node.id)} className="self-start text-xs font-medium text-[#2DD4BF] hover:underline">See more</button>
                           </div>
                         ))}
@@ -1664,7 +951,7 @@ export default function Home() {
                       {/* Center logo */}
                       <div className="absolute z-10" style={{ left: logoX, top: logoY, width: logoSize, height: logoSize }}>
                         <div className="flex h-full w-full items-center justify-center rounded-2xl border border-[#2DD4BF]/30 bg-[#0B0B0D]" style={{ animation: 'coreGlow 2s ease-in-out infinite' }}>
-                          <svg className="h-8 w-8" viewBox="0 0 612 633" fill="#2DD4BF">
+                          <svg className="h-11 w-11" viewBox="0 0 612 633" fill="#2DD4BF">
                             <path d="M150.066 523.027C150.066 523.027 266.828 630.601 300.296 632.297C333.764 633.992 552.581 495.592 581.992 243.134C581.992 243.134 470.79 353.155 468.772 357.964C466.754 362.772 394.924 505.231 298.514 544.173L150.066 523.027Z"/>
                             <path d="M206.247 374.515L300.403 460.278L605.928 152.563C605.928 152.563 615.353 137.987 609.9 122.144C604.447 106.301 581.133 92.3682 581.133 92.3682C581.133 92.3682 563.895 88.6973 548.932 98.9588C533.969 109.22 298.407 349.012 298.407 349.012L206.226 374.537L206.247 374.515Z"/>
                             <path d="M393.896 3.21383C393.896 3.21383 181.819 -13.3805 133.496 28.846C133.496 28.846 101.38 53.1901 94.6396 120.104C94.6396 120.104 181.969 78.3929 268.419 83.3519C354.868 88.3109 393.918 3.21383 393.918 3.21383H393.896Z"/>
@@ -1678,12 +965,10 @@ export default function Home() {
                       {/* Right cards */}
                       <div className="absolute right-0 top-0 flex flex-col gap-5" style={{ width: cardW }}>
                         {rightNodes.map((node) => (
-                          <div key={node.id} className="flex h-[120px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-5 transition-colors hover:border-[#2DD4BF]/30">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[#2DD4BF]/20 bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
-                              <span className="text-sm font-semibold text-white">{node.title}</span>
-                            </div>
-                            <p className="text-xs leading-relaxed text-gray-400">{node.desc}</p>
+                          <div key={node.id} className="flex h-[168px] flex-col gap-2 rounded-2xl border border-white/8 bg-[#0D0D10] p-6 transition-colors hover:border-[#2DD4BF]/30">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-[#2DD4BF]/10 text-[#2DD4BF]">{node.icon}</div>
+                            <span className="text-base font-semibold text-white">{node.title}</span>
+                            <p className="text-sm leading-relaxed text-gray-400">{node.desc}</p>
                             <button type="button" onClick={() => setAtmModal(node.id)} className="self-start text-xs font-medium text-[#2DD4BF] hover:underline">See more</button>
                           </div>
                         ))}
@@ -1697,10 +982,10 @@ export default function Home() {
             {/* Mobile fallback */}
             <div className="grid gap-5 sm:grid-cols-2 lg:hidden">
               {atmComponents.map((comp) => (
-                <div key={comp.id} className="flex flex-col rounded-3xl border border-white/8 bg-[#141419] p-6">
-                  <h3 className="mb-1 font-bold text-white">{comp.title}</h3>
-                  <p className="mb-4 text-sm text-gray-400">{comp.tagline}</p>
-                  <button type="button" onClick={() => setAtmModal(comp.id)} className="mt-auto self-start text-xs font-medium text-[#2DD4BF] hover:underline">more&hellip;</button>
+                <div key={comp.id} className="flex flex-col rounded-3xl border border-white/8 bg-white/[0.03] p-6">
+                  <h3 className="mb-1 text-base font-semibold text-white">{comp.title}</h3>
+                  <p className="mb-4 text-sm leading-relaxed text-gray-400">{comp.tagline}</p>
+                  <button type="button" onClick={() => setAtmModal(comp.id)} className="mt-auto self-start text-xs font-medium text-[#2DD4BF] hover:underline">See more</button>
                 </div>
               ))}
             </div>
@@ -1715,7 +1000,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
                 <div className="relative mx-auto w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#0F0F12] p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                   <button type="button" onClick={() => setAtmModal(null)} className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-gray-400 hover:text-white">✕</button>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-[0.22em] text-[#2DD4BF]">Agentic Tool Metadata</p>
+                  <p className="mb-1 text-xs font-medium uppercase tracking-[0.22em] text-[#2DD4BF]">Trustabl Agent Analyzer (TAA)</p>
                   <h3 className="mb-2 text-2xl font-bold text-white">{comp.title}</h3>
                   <p className="mb-6 text-sm text-gray-400">{comp.tagline}</p>
                   <ul className="space-y-4">
@@ -1733,7 +1018,7 @@ export default function Home() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="bg-[#050506] py-28 lg:py-32 reveal">
+        <section id="faq" className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-4xl px-4 sm:px-6">
             <div className="text-center">
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-[#2DD4BF]">FAQ</p>
@@ -1747,9 +1032,9 @@ export default function Home() {
                     className="flex w-full items-center justify-between gap-4 text-left"
                     onClick={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <span className="text-lg text-white">{item.q}</span>
+                    <span className={`text-lg transition-colors duration-200 ${faqOpen === i ? 'text-[#2DD4BF]' : 'text-gray-400'}`}>{item.q}</span>
                     <ChevronDown
-                      className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${faqOpen === i ? 'rotate-180' : ''}`}
+                      className={`h-5 w-5 flex-shrink-0 transition-transform duration-200 ${faqOpen === i ? 'rotate-180 text-[#2DD4BF]' : 'text-gray-400'}`}
                     />
                   </button>
                   {faqOpen === i && (
@@ -1761,108 +1046,51 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="share" className="bg-[#050506] py-28 lg:py-32 reveal">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="rounded-[32px] border border-white/8 bg-white/[0.03] p-8 lg:p-12">
-              <div className="grid lg:grid-cols-[1fr_auto] lg:items-center gap-10">
-                {/* Left — headline + CTA */}
-                <div className="flex flex-col">
-                  <h2 className="text-3xl font-semibold leading-tight lg:text-4xl">
-                    Make your AI tools<br className="hidden lg:block" /> production-ready today.
-                  </h2>
-                  <p className="mt-3 text-sm text-gray-500">No credit card required. Connect GitHub in under a minute.</p>
-                </div>
-                {/* Right — share icons */}
-                <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:flex-row lg:items-center lg:justify-center lg:gap-6">
-                  <div className="flex w-full justify-center lg:w-auto">
-                    <a
-                      href={githubRepoUrl}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#2DD4BF] px-6 py-2.5 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6]"
-                    >
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
-                      View on GitHub
-                    </a>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 lg:items-start">
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Just found Trustabl — it automatically hardens my AI tools. Improved scores from 38% → 91%. Try it free: trustabl.ai')}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-500 transition-colors hover:border-[#2DD4BF]/30 hover:text-[#2DD4BF]"
-                      >
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
-                      </a>
-                      <a
-                        href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent('https://trustabl.ai')}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-500 transition-colors hover:border-[#2DD4BF]/30 hover:text-[#2DD4BF]"
-                      >
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                        </svg>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={copyLink}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-gray-500 transition-colors hover:border-[#2DD4BF]/30 hover:text-[#2DD4BF]"
-                      >
-                        {copied
-                          ? <svg className="h-4 w-4 text-[#2DD4BF]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                          : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                        }
-                      </button>
-                    </div>
-                  </div>
-                </div>
+        <section id="share" className="bg-[#050506] py-20 lg:py-24 reveal">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+            <div className="rounded-[32px] border border-white/8 bg-white/[0.03] p-8 text-center lg:p-12">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#2DD4BF]">Stay Updated</p>
+            <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Product updates, delivered.</h2>
+            <p className="mb-8 text-base text-gray-400 lg:whitespace-nowrap">New features, security guides, and early access drops, straight to your inbox. No spam.</p>
+            {newsletterSubmitted ? (
+              <div className="mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-6 py-4 text-[#2DD4BF]">
+                <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm font-medium">You&apos;re on the list. We&apos;ll be in touch.</span>
               </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newsletterEmail) setNewsletterSubmitted(true);
+                }}
+                className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row sm:gap-2"
+              >
+                <input
+                  type="email"
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="h-10 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white placeholder-gray-600 outline-none transition-colors focus:border-[#2DD4BF]/40 focus:ring-1 focus:ring-[#2DD4BF]/20"
+                />
+                <button
+                  type="submit"
+                  className="flex h-10 items-center justify-center rounded-xl bg-[#2DD4BF] px-6 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6] active:scale-100"
+                >
+                  Notify Me
+                </button>
+              </form>
+            )}
             </div>
           </div>
         </section>
       </main>
 
-      {/* Newsletter */}
-      <section className="bg-[#050506] py-20 reveal">
-        <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#2DD4BF]">Stay Updated</p>
-          <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">Product updates, delivered.</h2>
-          <p className="mb-8 text-base text-gray-400">New features, security guides, and early access drops — straight to your inbox. No spam.</p>
-          {newsletterSubmitted ? (
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-6 py-4 text-[#2DD4BF]">
-              <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-sm font-medium">You&apos;re on the list. We&apos;ll be in touch.</span>
-            </div>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (newsletterEmail) setNewsletterSubmitted(true);
-              }}
-              className="flex flex-col gap-3 sm:flex-row sm:gap-2"
-            >
-              <input
-                type="email"
-                required
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="you@company.com"
-                className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-colors focus:border-[#2DD4BF]/40 focus:ring-1 focus:ring-[#2DD4BF]/20"
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-[#2DD4BF] px-6 py-3 text-sm font-medium text-[#08121F] transition-all hover:scale-105 hover:bg-[#22B8A6] active:scale-100"
-              >
-                Notify Me
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
-
-      <Footer />
+      <div className="pt-12">
+        <Footer />
+      </div>
 
       {demoOpen && (
         <div

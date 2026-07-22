@@ -12,6 +12,7 @@ type Finding = {
   msg1: string;
   userPrompt: string;
   msg2: string;
+  msg3?: string;
   isPass: boolean;
   file: string;
   sbLoc: string;
@@ -33,7 +34,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '!', sevIconClass: 'bg-red-500/10 text-red-400',
     msg1: 'Your agent passes <code>user_input</code> straight into <code>run_command()</code>. A malicious prompt can make the agent execute arbitrary shell commands at runtime. The fix adds <code>sanitize()</code> with an explicit <code>SAFE_CMDS</code> allowlist.',
     userPrompt: 'Will the allowlist break my existing tool calls?',
-    msg2: 'No — I traced every call site. All 6 callers only invoke <code>ls</code>, <code>cat</code>, or <code>git status</code>, which are in <code>SAFE_CMDS</code>. <strong class="text-white">No behavior change for current usage</strong> — safe to accept.',
+    msg2: 'No — I traced every call site. All 6 callers only invoke <code>ls</code>, <code>cat</code>, or <code>git status</code>, which are in <code>SAFE_CMDS</code>. <strong class="text-white">No behavior change for current usage.</strong>',
     isPass: false, file: 'tool_executor.py', sbLoc: 'Ln 42, Col 1',
     diff: `<div class="ctx">38   <span class="kw">import</span> shlex, subprocess</div>
 <div class="ctx">39   <span class="kw">from</span> trustabl.guards <span class="kw">import</span> sanitize</div>
@@ -53,7 +54,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '!', sevIconClass: 'bg-red-500/10 text-red-400',
     msg1: '<code>call_tool()</code> accepts any params dict without checking required fields or types. Malformed inputs cause silent failures that are hard to debug in production. The fix validates against the tool\'s schema before execution.',
     userPrompt: 'What happens when validation fails at runtime?',
-    msg2: '<code>validate()</code> raises <code>ToolParamError</code> with the missing field name, so the agent gets a structured error it can recover from instead of a silent <code>None</code>. <strong class="text-white">Safe to accept.</strong>',
+    msg2: '<code>validate()</code> raises <code>ToolParamError</code> with the missing field name, so the agent gets a structured error it can recover from instead of a silent <code>None</code>.',
     isPass: false, file: 'agent_core.py', sbLoc: 'Ln 66, Col 1',
     diff: `<div class="ctx">63   <span class="kw">async def</span> <span class="fn">call_tool</span>(name: <span class="kw">str</span>, params: <span class="kw">dict</span>):</div>
 <div class="ctx">64       tool = REGISTRY[name]</div>
@@ -70,7 +71,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '!', sevIconClass: 'bg-red-500/10 text-red-400',
     msg1: '<code>web_search()</code> makes a single attempt with no retry. On a network blip the agent gives up, then loops trying to recover — burning tokens. Observed in your traces: <strong class="text-white">47× loops, $2.40 wasted per run</strong>.',
     userPrompt: 'Why 3 attempts instead of more?',
-    msg2: '3 attempts with exponential backoff covers 99.7% of transient failures in your trace history. More attempts past that mostly delays surfacing real outages. You can tune it in <code>RETRY_CONFIG</code>. <strong class="text-white">Safe to accept.</strong>',
+    msg2: '3 attempts with exponential backoff covers 99.7% of transient failures in your trace history. More attempts past that mostly delays surfacing real outages. You can tune it in <code>RETRY_CONFIG</code>.',
     isPass: false, file: 'skills/web_search.py', sbLoc: 'Ln 76, Col 1',
     diff: `<div class="ctx">73   <span class="kw">async def</span> <span class="fn">web_search</span>(query: <span class="kw">str</span>):</div>
 <div class="ctx">74       client = <span class="fn">SearchClient</span>(api_key=settings.SEARCH_KEY)</div>
@@ -87,7 +88,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '~', sevIconClass: 'bg-amber-500/10 text-amber-400',
     msg1: 'Retries fire immediately with no delay. Under load this hammers the downstream API, raises error rates, and burns token budget fast. The fix doubles the delay on each attempt: 1s → 2s → 4s.',
     userPrompt: 'How much latency does this add per request?',
-    msg2: 'Zero on the happy path — backoff only applies after a failure. Worst case (2 failures then success) adds 3s total, versus the current behavior of failing outright. <strong class="text-white">Safe to accept.</strong>',
+    msg2: 'Zero on the happy path — backoff only applies after a failure. Worst case (2 failures then success) adds 3s total, versus the current behavior of failing outright.',
     isPass: false, file: 'skills/web_search.py', sbLoc: 'Ln 90, Col 1',
     diff: `<div class="ctx">88   RETRY_CONFIG = {</div>
 <div class="ctx">89       <span class="str">"attempts"</span>: 3,</div>
@@ -102,7 +103,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '~', sevIconClass: 'bg-amber-500/10 text-amber-400',
     msg1: '<code>generate_report()</code> writes artifacts with no logging or tracing. When something goes wrong in production you have no signal — no timing, no output size, no errors. The fix adds an <code>@observe</code> decorator.',
     userPrompt: 'Does the decorator add latency to report generation?',
-    msg2: 'Negligible — it records a timestamp before and after the call and logs asynchronously. Measured overhead is under 1ms per invocation. Read-only instrumentation, no behavior change. <strong class="text-white">Safe to accept.</strong>',
+    msg2: 'Negligible — it records a timestamp before and after the call and logs asynchronously. Measured overhead is under 1ms per invocation. Read-only instrumentation, no behavior change.',
     isPass: false, file: 'artifacts/report_gen.py', sbLoc: 'Ln 31, Col 1',
     diff: `<div class="ctx">29   <span class="kw">from</span> trustabl <span class="kw">import</span> observe</div>
 <div class="ctx">30</div>
@@ -118,7 +119,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '~', sevIconClass: 'bg-amber-500/10 text-amber-400',
     msg1: 'Token usage isn\'t tracked per tool call, so there\'s no visibility into which tools burn budget. Your agent looped 47× with no way to detect it. The fix wraps each call with <code>track_cost()</code>.',
     userPrompt: 'Where do the cost logs end up?',
-    msg2: 'They go through your existing logger (<code>log.info</code>) with structured fields — <code>tool</code>, <code>tokens</code>, <code>usd</code>, <code>duration_ms</code> — so they land wherever your logs already ship. Zero behavior change. <strong class="text-white">Safe to accept.</strong>',
+    msg2: 'They go through your existing logger (<code>log.info</code>) with structured fields — <code>tool</code>, <code>tokens</code>, <code>usd</code>, <code>duration_ms</code> — so they land wherever your logs already ship. Zero behavior change.',
     isPass: false, file: 'agent_core.py', sbLoc: 'Ln 116, Col 1',
     diff: `<div class="ctx">114  <span class="kw">async def</span> <span class="fn">run_tool</span>(name: <span class="kw">str</span>, params: <span class="kw">dict</span>):</div>
 <div class="removed">115 -    result = <span class="kw">await</span> tools[name].<span class="fn">call</span>(params)</div>
@@ -134,7 +135,7 @@ const FINDINGS: Finding[] = [
     sevIcon: '~', sevIconClass: 'bg-amber-500/10 text-amber-400',
     msg1: 'Skill output goes straight back to the agent with no guardrail check. If a skill is compromised or returns unexpected content, the agent acts on it with no safety filter in between.',
     userPrompt: 'What exactly does POLICY block?',
-    msg2: '<code>POLICY</code> blocks prompt-injection patterns, PII leakage, and instructions that target other tools. Violations raise <code>GuardrailViolation</code> with the matched rule, so nothing is silently dropped. <strong class="text-white">Safe to accept.</strong>',
+    msg2: '<code>POLICY</code> blocks prompt-injection patterns, PII leakage, and instructions that target other tools. Violations raise <code>GuardrailViolation</code> with the matched rule, so nothing is silently dropped.',
     isPass: false, file: 'agent_core.py', sbLoc: 'Ln 202, Col 1',
     diff: `<div class="ctx">199  <span class="kw">async def</span> <span class="fn">run_skill</span>(skill, input: <span class="kw">str</span>):</div>
 <div class="ctx">200      output = <span class="kw">await</span> skill.<span class="fn">execute</span>(input)</div>
@@ -150,7 +151,8 @@ const FINDINGS: Finding[] = [
     sevIcon: '✓', sevIconClass: 'bg-[#2DD4BF]/10 text-[#5EEAD4]',
     msg1: 'Context window usage is within safe limits across all tested runs. The agent correctly truncates history before hitting the model\'s maximum context length.',
     userPrompt: 'How often does this get re-checked?',
-    msg2: 'On every scan — each push to <code>main</code> re-runs the check against your latest traces. If usage trends toward the limit, this flips to a warning before it ever fails. <strong class="text-white">No fix needed.</strong>',
+    msg2: 'On every scan — each push to <code>main</code> re-runs the check against your latest traces. If usage trends toward the limit, this flips to a warning before it ever fails.',
+    msg3: 'Confirmed — the truncation guard is in place and verified against your latest traces. Context window usage is holding at 14,200 / 128,000 tokens, well inside the safe range.',
     isPass: true, file: 'agent_core.py', sbLoc: 'Ln 1, Col 1',
     diff: `<div class="ctx"><span class="cm"># ✓ context_window · no issues found</span></div>
 <div class="ctx"><span class="cm">#   max observed: 14,200 / 128,000 tokens</span></div>
@@ -160,17 +162,12 @@ const FINDINGS: Finding[] = [
 
 export default function IdeWindow() {
   const [active, setActive] = useState(0);
+  const [decisions, setDecisions] = useState<Record<number, 'accepted' | 'rejected'>>({});
   const f = FINDINGS[active];
   const threadRef = useRef<HTMLDivElement>(null);
-  const msgRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const selectFinding = (idx: number) => {
     setActive(idx);
-    const el = msgRefs.current[idx];
-    const container = threadRef.current;
-    if (el && container) {
-      container.scrollTo({ top: el.offsetTop - container.offsetTop - 12, behavior: 'smooth' });
-    }
   };
 
   useEffect(() => {
@@ -181,11 +178,7 @@ export default function IdeWindow() {
   }, []);
 
   useEffect(() => {
-    const el = msgRefs.current[active];
-    const container = threadRef.current;
-    if (el && container) {
-      container.scrollTo({ top: el.offsetTop - container.offsetTop - 12, behavior: 'smooth' });
-    }
+    threadRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [active]);
 
   return (
@@ -197,34 +190,14 @@ export default function IdeWindow() {
           <span className="h-[11px] w-[11px] rounded-full bg-[#febc2e]" />
           <span className="h-[11px] w-[11px] rounded-full bg-[#28c840]" />
         </div>
-        <div className="hidden items-center gap-2.5 font-mono text-[11px] text-gray-500 sm:flex">
-          <span className="text-gray-400">payment-agent-v2</span>
-          <span className="text-white/15">—</span>
-          <span>trustabl scan</span>
-        </div>
         <div className="w-11" />
-      </div>
-
-      {/* Scan status strip — single source of truth for scan results */}
-      <div className="flex items-center gap-2 border-b border-white/5 bg-[#2DD4BF]/[0.03] px-4 py-1.5 font-mono text-[11px] text-gray-500">
-        <span className="text-[#2DD4BF]">▶</span>
-        <span className="hidden text-gray-400 sm:inline">github-actions / trustabl-action@v1 · on: push → main</span>
-        <span className="ml-auto flex items-center gap-2.5 text-[10.5px]">
-          <span className="flex items-center gap-1 text-red-400"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />3 high</span>
-          <span className="flex items-center gap-1 text-amber-400"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />4 med</span>
-          <span className="flex items-center gap-1 text-[#5EEAD4]"><span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />1 pass</span>
-          <span className="hidden items-center gap-1.5 text-[#5EEAD4] md:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF] shadow-[0_0_4px_#00E5CC]" />
-            scan complete · 2.1s
-          </span>
-        </span>
       </div>
 
       {/* Three columns */}
       <div className="grid min-h-[620px] grid-cols-1 lg:h-[620px] lg:grid-cols-[27%_43%_30%]">
         {/* Findings */}
         <div className="hidden border-white/5 bg-white/[0.02] lg:block lg:border-r">
-          <div className="border-b border-white/5 px-3.5 py-2.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+          <div className="border-b border-white/5 bg-white/[0.02] px-3.5 py-2.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500">
             Findings · {FINDINGS.length}
           </div>
           <div className="p-2">
@@ -262,13 +235,6 @@ export default function IdeWindow() {
 
         {/* Diff */}
         <div className="flex min-h-0 flex-col border-white/5 bg-black/20 lg:border-r">
-          <div className="flex h-9 items-center justify-between border-b border-white/5 bg-white/[0.03]">
-            <div className="flex h-full items-center gap-1.5 border-b-2 border-[#2DD4BF] bg-[#2DD4BF]/5 px-3.5 font-mono text-[11px] text-white">
-              <span className="h-2 w-2 rounded-sm border border-[#2DD4BF]" />
-              {f.file}
-            </div>
-            <span className="px-3.5 font-mono text-[10px] text-gray-500">{f.isPass ? 'check passed' : 'proposed fix'}</span>
-          </div>
           <div className="min-h-0 flex-1 overflow-y-auto bg-black/30 py-2">
             <div
               className="diff-code px-3.5 py-2 font-mono text-[12px] leading-[1.9]"
@@ -279,30 +245,42 @@ export default function IdeWindow() {
 
         {/* Chat — one continuous review thread */}
         <div className="flex min-h-0 flex-col bg-white/[0.015]">
-          <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.02] px-4 py-3">
-            <div className="text-sm font-semibold text-white">Review session</div>
-            <span className="font-mono text-[10.5px] text-gray-500">{FINDINGS.length} findings</span>
+          <div className="border-b border-white/5 bg-white/[0.02] px-3.5 py-2.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+            Review session
           </div>
-          <div ref={threadRef} className="no-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
-            {FINDINGS.map((item, idx) => (
-              <div
-                key={idx}
-                ref={(el) => { msgRefs.current[idx] = el; }}
-                onClick={() => selectFinding(idx)}
-                className="scroll-mt-3 px-3 py-3"
-              >
-                <div className="space-y-4">
-                  <ChatMsg html={item.msg1} />
-                  <UserMsg text={item.userPrompt} />
-                  <ChatMsg html={item.msg2} />
-                  {!item.isPass && (
-                    <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#5EEAD4]">
-                      ✓ Fix applied
+          <div ref={threadRef} className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
+            <div className="px-3 py-3">
+              <div className="space-y-4">
+                <ChatMsg html={f.msg1} />
+                <UserMsg text={f.userPrompt} />
+                <ChatMsg html={f.msg2} />
+                {f.msg3 && <ChatMsg html={f.msg3} />}
+                {!f.isPass && (
+                  decisions[active] ? (
+                    <div className={`flex items-center gap-1.5 text-[12px] font-semibold ${decisions[active] === 'accepted' ? 'text-[#5EEAD4]' : 'text-gray-500'}`}>
+                      {decisions[active] === 'accepted' ? '✓ Fix accepted' : '✕ Fix rejected'}
                     </div>
-                  )}
-                </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDecisions((d) => ({ ...d, [active]: 'accepted' }))}
+                        className="rounded-lg border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 px-3 py-1.5 text-[12px] font-semibold text-[#5EEAD4] transition-colors hover:bg-[#2DD4BF]/20"
+                      >
+                        Accept fix
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDecisions((d) => ({ ...d, [active]: 'rejected' }))}
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-gray-400 transition-colors hover:bg-white/10"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )
+                )}
               </div>
-            ))}
+            </div>
           </div>
           <div className="border-t border-white/5 bg-white/[0.02] p-2.5">
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">

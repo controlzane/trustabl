@@ -5,8 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Network, ShieldCheck, Gauge, Terminal, Package, Copy, Check } from 'lucide-react';
 import HeroParticles from '@/components/HeroParticles';
-import PreReleaseBanner from '@/components/PreReleaseBanner';
-import { useGithubStars } from '@/hooks/useGithubStars';
 import Footer from '@/components/Footer';
 
 const GITHUB_URL = 'https://github.com/trustabl/trustabl';
@@ -27,7 +25,6 @@ export default function ProductsPage() {
     setTimeout(() => setCopiedCmd(null), 2000);
   }
   const [menuOpen, setMenuOpen] = useState(false);
-  const starCount = useGithubStars();
 
   const navLinks = [
     { label: 'Home', href: '/' },
@@ -67,12 +64,6 @@ export default function ProductsPage() {
             >
               <GithubIcon className="h-4 w-4" />
               <span>GitHub</span>
-              {starCount !== null && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-amber-400/15 px-2 py-0.5 text-[12px] font-semibold text-amber-400">
-                  <svg className="h-3 w-3 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  {starCount >= 1000 ? `${(starCount / 1000).toFixed(1)}k` : starCount}
-                </span>
-              )}
             </a>
             <a
               href={GITHUB_URL}
@@ -112,8 +103,6 @@ export default function ProductsPage() {
       </nav>
 
       <main className="page-transition pt-16">
-        <PreReleaseBanner />
-
         {/* ── HERO ── */}
         <section className="relative border-b border-white/8 py-24 md:py-32 overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
