@@ -7,7 +7,7 @@ import {
   Terminal,
   Zap,
   Monitor, Wrench, FileText, Cpu, Code2, Link2,
-  ChevronDown, ChevronRight, PlayCircle, X, Maximize2,
+  ChevronDown, ChevronRight, X, Maximize2,
   TrendingUp, Search, ShieldCheck, DollarSign, Package, Settings2,
   KeyRound, AlertTriangle,
 } from 'lucide-react';
@@ -255,7 +255,7 @@ export default function Home() {
     {
       id: 'llm',
       title: 'LLM Model',
-      tagline: "Rich ATM dramatically improves how the model understands and uses tools.",
+      tagline: "Rich TAA dramatically improves how the model understands and uses tools.",
       preview: [
         'Higher Tool-Calling Accuracy — precise schemas reduce hallucinations and invalid calls.',
         'Better Context Efficiency — right tool, fewer reasoning tokens.',
@@ -273,7 +273,7 @@ export default function Home() {
     {
       id: 'agent',
       title: 'Agent',
-      tagline: 'The agent becomes far more reliable and autonomous with rich ATM.',
+      tagline: 'The agent becomes far more reliable and autonomous with rich TAA.',
       preview: [
         'Self-Healing Behavior — recover from failures without human intervention.',
         'Higher Success Rate — prevents calling the wrong tool at the wrong time.',
@@ -330,7 +330,7 @@ export default function Home() {
       title: 'NVIDIA OpenShell',
       tagline: 'One of the highest-leverage integrations — automatic policy generation at every layer.',
       preview: [
-        'Auto Least-Privilege Policies — ready-to-use OpenShell YAML from ATM fields.',
+        'Auto Least-Privilege Policies — ready-to-use OpenShell YAML from TAA fields.',
         '1-Click Secure Deployment — minimal manual policy work required.',
         'Continuous Hardening Loop — runtime signals improve metadata automatically.',
       ],
@@ -346,11 +346,11 @@ export default function Home() {
     {
       id: 'judge',
       title: 'LLM-as-Judge',
-      tagline: 'The judge layer becomes much more efficient and effective with rich ATM context.',
+      tagline: 'The judge layer becomes much more efficient and effective with rich TAA context.',
       preview: [
         'Fewer Judge Calls — many actions auto-approved via strong metadata.',
         'Higher-Quality Judgments — richer context drives better decisions.',
-        'Stronger Defense-in-Depth — ATM + judge together far stronger than either alone.',
+        'Stronger Defense-in-Depth — TAA + judge together far stronger than either alone.',
       ],
       bullets: [
         { head: 'Significantly Fewer Judge Calls', body: 'Many actions that previously required judge review can now be auto-approved because of strong validation_rules, risk_level, idempotency, and side_effects metadata.' },
@@ -358,7 +358,7 @@ export default function Home() {
         { head: 'Lower Latency & Cost', body: 'Fewer judge invocations + smaller context per judgment = faster and cheaper real-time policing.' },
         { head: 'Better High-Risk Handling', body: 'Pre-classified risk_level and approval_gates let the judge focus its intelligence on truly complex or novel cases.' },
         { head: 'Improved Audit & Explainability', body: 'Structured decision_audit_fields and applied_fixes give the judge (and humans) clear reasoning for why actions were allowed or blocked.' },
-        { head: 'Stronger Defense-in-Depth', body: 'ATM provides the structural hardening layer while the judge provides dynamic behavioral oversight — together they are far stronger than either alone.' },
+        { head: 'Stronger Defense-in-Depth', body: 'TAA provides the structural hardening layer while the judge provides dynamic behavioral oversight — together they are far stronger than either alone.' },
       ],
     },
   ];
@@ -381,15 +381,15 @@ export default function Home() {
       a: 'No. Trustabl works on top of your existing tools. It analyzes your code, documentation, and behavior, then generates enriched metadata and optional policy files without modifying your source code.',
     },
     {
-      q: 'Is Agentic Tool Metadata (ATM) the same thing as Skills (SKILL.md)?',
-      a: 'No. Skills (SKILL.md) teach the agent how to perform a task or workflow. Agentic Tool Metadata (ATM) makes the tools themselves reliable, safe, and production-ready. Skills focus on process. ATM focuses on resilience, validation, policy, observability, and supply-chain trust. The two are highly complementary — great skills need hardened tools underneath them.',
+      q: 'Is Trustabl Agent Analyzer (TAA) the same thing as Skills (SKILL.md)?',
+      a: 'No. Skills (SKILL.md) teach the agent how to perform a task or workflow. Trustabl Agent Analyzer (TAA) makes the tools themselves reliable, safe, and production-ready. Skills focus on process. TAA focuses on resilience, validation, policy, observability, and supply-chain trust. The two are highly complementary — great skills need hardened tools underneath them.',
     },
     {
-      q: 'If I use OpenShell to secure my runtime agents, do I still need ATM?',
-      a: 'Yes. OpenShell secures the runtime environment. Trustabl hardens the tools the agents call inside that environment. ATM automatically generates least-privilege policies, egress rules, binary requirements, and sandbox compatibility metadata that OpenShell can consume directly. Together they deliver defense-in-depth: secure runtime + production-hardened tools.',
+      q: 'If I use OpenShell to secure my runtime agents, do I still need TAA?',
+      a: 'Yes. OpenShell secures the runtime environment. Trustabl hardens the tools the agents call inside that environment. TAA automatically generates least-privilege policies, egress rules, binary requirements, and sandbox compatibility metadata that OpenShell can consume directly. Together they deliver defense-in-depth: secure runtime + production-hardened tools.',
     },
     {
-      q: "As models get smarter, won't they just add ATM to every tool?",
+      q: "As models get smarter, won't they just add TAA to every tool?",
       a: "Smarter models can describe tools better, but they cannot reliably harden them for production. Trustabl adds critical production-grade elements models cannot consistently provide: structured validation rules, circuit breakers, policy enforcement, cryptographic attestations, least-privilege OpenShell policies, and SLSA supply-chain provenance.",
     },
     {
@@ -518,9 +518,20 @@ export default function Home() {
             </div>
 
             <div className="mt-6 flex flex-col items-center">
-              <p className="max-w-3xl text-center text-sm leading-relaxed text-gray-500 sm:text-base">
+              <p className="max-w-4xl text-center text-sm leading-relaxed text-gray-500 sm:text-base">
                 It&apos;s usually not the model. It&apos;s the agent&apos;s config, tools, context, and guardrails.{' '}
-                <span className="text-white">Trustabl<br />finds and fixes these reliability issues in your agent repo before they reach production.</span>
+                Trustabl finds and
+                <br />
+                fixes these issues before they reach production.{' '}
+                We&apos;re the{' '}
+                <a
+                  href="https://www.trustabl.ai/blog/agent-reliability-engineering-the-discipline-that-will-decide-whether-agents-actually-work/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#2DD4BF] hover:underline"
+                >
+                  leaders in agent reliability engineering →
+                </a>
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -545,18 +556,9 @@ export default function Home() {
                   </svg>
                   Use GitHub Action
                 </a>
-
-                <button
-                  type="button"
-                  onClick={() => setDemoOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-gray-300 transition-all hover:text-white"
-                >
-                  <PlayCircle className="h-4 w-4" />
-                  Watch Demo
-                </button>
               </div>
 
-              <p className="mt-5 text-center text-xs text-gray-600">
+              <p className="mt-5 text-center text-[14px] text-gray-400">
                 Open source <span className="mx-2 text-gray-700">•</span> Runs locally <span className="mx-2 text-gray-700">•</span> Deterministic <span className="mx-2 text-gray-700">•</span> No code leaves your machine
               </p>
             </div>
@@ -847,7 +849,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ATM Diagram Section */}
+        {/* TAA Diagram Section */}
         <section id="atm" className="bg-[#050506] py-20 lg:py-24 reveal">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-14 text-center">
