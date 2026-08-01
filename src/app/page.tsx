@@ -535,15 +535,12 @@ export default function Home() {
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <a
-                  href={`${DOCS_URL}/quick-start/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/scan"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2DD4BF] px-5 py-3 text-sm font-semibold text-[#08121F] transition-all hover:scale-[1.02] hover:bg-[#22B8A6]"
                 >
-                  <Terminal className="h-4 w-4" />
                   Scan Your Repository
-                </a>
+                </Link>
 
                 <a
                   href={`${githubRepoUrl}/trustabl-action`}

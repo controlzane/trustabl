@@ -1,0 +1,281 @@
+<!--
+  Subject line (not rendered — for reference / ESP subject field):
+  Your scan is ready
+
+  This file is a RENDERED PREVIEW with realistic sample data filled in, so it
+  can be opened directly in a browser and pasted as-is into Gmail compose or
+  an ESP's HTML editor to see exactly what a recipient would get.
+
+  Template variables to bind when wiring this into a real send pipeline
+  (all appear below as the literal sample values, listed here for reference):
+    first_name             -> "John"
+    repo_name             -> "prompt-engine"
+    score                 -> "38"
+    score_color           -> "#DC2626"
+    finding_count          -> "7"
+    critical_count        -> "2"
+    high_count             -> "2"
+    medium_count           -> "2"
+    low_count               -> "1"
+    finding_1_title / severity / severity_color
+    finding_2_title / severity / severity_color
+    finding_3_title / severity / severity_color
+    report_url             -> full report link
+    github_action_url      -> GitHub Action install link
+    unsubscribe_url         -> unsubscribe link
+
+  NOTE on score_color: most ESP/merge-tag engines (SendGrid dynamic templates,
+  Postmark, Mailchimp merge tags) can't run conditional inline-style logic
+  (red if <50%, orange 50-75%, green >75%) inside raw HTML without a
+  Handlebars-style {{#if}} layer. Compute score_color server-side when
+  rendering (score < 50 -> #DC2626, 50-75 -> #D97706, >75 -> #16A34A) and pass
+  the resulting hex in as its own variable, same as severity_color per finding.
+  If your pipeline truly can't compute it, fall back to a neutral #6B7280
+  rather than leaving an unresolved bind in a sent email.
+
+  NOTE on dark mode: inline styles can't carry media queries, so this is the
+  one standard exception to "no <style> blocks" for email — dark-mode
+  overrides live in <head> and are ignored by clients that don't support
+  them (the inline styles above remain the light-mode fallback). Apple Mail,
+  Outlook.com/iOS/Mac, and newer Gmail apps honor prefers-color-scheme;
+  Gmail webmail on desktop currently does not, so this degrades gracefully
+  to light mode there rather than breaking.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Your scan is ready</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #050506 !important; }
+      .email-card { background-color: #0A0A0C !important; border-color: #FFFFFF1A !important; }
+      .text-body { color: #F3F4F6 !important; }
+      .text-heading { color: #FFFFFF !important; }
+      .text-muted { color: #9CA3AF !important; }
+      .score-card { background-color: #101114 !important; border-color: #FFFFFF1A !important; }
+      .issues-card { border-color: #FFFFFF1A !important; }
+      .issue-row { border-color: #FFFFFF1A !important; }
+      .btn-secondary { background-color: #0A0A0C !important; border-color: #FFFFFF1A !important; }
+      .btn-secondary-text { color: #FFFFFF !important; }
+    }
+  </style>
+</head>
+<body class="email-bg" style="margin:0; padding:0; background-color:#F3F4F6; font-family:Arial, Helvetica, sans-serif;">
+
+  <!-- Preheader (hidden preview text) -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    prompt-engine scored 38% — 7 findings inside.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-bg" style="background-color:#F3F4F6;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+
+        <!-- Main container -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-card" style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #E5E7EB;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#050506; padding:20px 32px; border-bottom:1px solid #FFFFFF0D;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="left">
+                    <!--
+                      Same logo asset as the site header (public/trustabl-logo.svg).
+                      Using a relative src here so it renders when this file is
+                      previewed via the dev server (localhost:3000/emails/...).
+                      For a real send this MUST be an absolute, publicly-hosted URL
+                      (e.g. https://trustabl.ai/trustabl-logo.svg) — recipients' mail
+                      clients fetch it over the internet, relative paths won't resolve.
+                      Also: Outlook desktop (Word rendering engine) doesn't support SVG
+                      in <img> — export a PNG (@2x for retina) for the production send.
+                    -->
+                    <img src="/trustabl-logo.svg" width="117" height="28" alt="Trustabl" style="display:block; width:117px; height:28px; border:0; outline:none; text-decoration:none;">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="text-body" style="font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; color:#111827; padding-bottom:8px;">
+                    Hi John,
+                  </td>
+                </tr>
+                <tr>
+                  <td class="text-body" style="font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; color:#111827; padding-bottom:24px;">
+                    We finished scanning <strong>prompt-engine</strong>. Here&rsquo;s what we found.
+                  </td>
+                </tr>
+
+                <!-- Score block -->
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="score-card" style="background-color:#F9FAFB; border:1px solid #E5E7EB; border-radius:8px;">
+                      <tr>
+                        <td align="center" style="padding:28px 20px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td align="center" style="font-family:Arial, Helvetica, sans-serif; font-size:44px; font-weight:bold; color:#DC2626; line-height:1;">
+                                38%
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="center" class="text-muted" style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:bold; color:#6B7280; letter-spacing:0.5px; text-transform:uppercase; padding-top:6px;">
+                                Reliability score
+                              </td>
+                            </tr>
+                          </table>
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+                            <tr>
+                              <td align="center" class="text-muted" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:18px; color:#4B5563;">
+                                7 findings found: 2 critical, 2 high, 2 medium, 1 low
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Top issues heading -->
+                <tr>
+                  <td class="text-heading" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:bold; color:#111827; text-transform:uppercase; letter-spacing:0.5px; padding-bottom:10px;">
+                    Top 3 of 7 issues
+                  </td>
+                </tr>
+
+                <!-- Top issues list -->
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="issues-card" style="border:1px solid #E5E7EB; border-radius:8px;">
+                      <tr>
+                        <td class="issue-row" style="padding:14px 16px; border-bottom:1px solid #E5E7EB;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td width="72" valign="middle">
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td style="background-color:#DC2626; border-radius:10px; padding:3px 9px; font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:bold; color:#FFFFFF; text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap;">
+                                      Critical
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td valign="middle" class="text-heading" style="font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:19px; color:#111827; padding-left:12px;">
+                                Shell command built from unsanitized tool input
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="issue-row" style="padding:14px 16px; border-bottom:1px solid #E5E7EB;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td width="72" valign="middle">
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td style="background-color:#DC2626; border-radius:10px; padding:3px 9px; font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:bold; color:#FFFFFF; text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap;">
+                                      Critical
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td valign="middle" class="text-heading" style="font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:19px; color:#111827; padding-left:12px;">
+                                Missing tool description causing incorrect LLM selection
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:14px 16px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td width="72" valign="middle">
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td style="background-color:#EA580C; border-radius:10px; padding:3px 9px; font-family:Arial, Helvetica, sans-serif; font-size:10px; font-weight:bold; color:#FFFFFF; text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap;">
+                                      High
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td valign="middle" class="text-heading" style="font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:19px; color:#111827; padding-left:12px;">
+                                HTTP request without timeout or SSRF protection
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Secondary CTA button (View full report) -->
+                <tr>
+                  <td style="padding-bottom:12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" class="btn-secondary" style="background-color:#FFFFFF; border:1px solid #E5E7EB; border-radius:8px;">
+                          <a href="https://trustabl.ai/report/9f21ac" target="_blank" class="btn-secondary-text" style="display:block; padding:14px 32px; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:bold; color:#111827; text-decoration:none; border-radius:8px;">
+                            View full report
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Primary CTA button (Add GitHub Action) -->
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#2DD4BF; border-radius:8px;">
+                          <a href="https://github.com/trustabl/trustabl-action" target="_blank" style="display:block; padding:14px 32px; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:bold; color:#08121F; text-decoration:none; border-radius:8px;">
+                            Add GitHub Action
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Secondary CTA copy -->
+                <tr>
+                  <td align="center" class="issue-row" style="border-top:1px solid #E5E7EB; padding-top:20px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" class="text-muted" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:19px; color:#6B7280;">
+                          Fix these automatically. Connect the repo and let Trustabl autofix issues in your CI pipeline.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Main container -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
