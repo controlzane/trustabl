@@ -34,6 +34,7 @@ export default function Footer() {
               <li><a href={`${githubRepoUrl}/trustabl-action`} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white">GitHub Actions</a></li>
               <li><a href="https://marketplace.visualstudio.com/items?itemName=Trustabl.trustabl-azure-devops-extension" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white">MS Azure DevOps Marketplace</a></li>
               <li><a href="https://gitlab.com/explore/catalog/trustabl-ai/components?tab=components" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white">GitLab Catalog</a></li>
+              <li><a href="https://cursor.directory/plugins/trustabl" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-white">Cursor Directory</a></li>
             </ul>
           </div>
 
